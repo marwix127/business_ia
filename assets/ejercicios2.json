@@ -1,0 +1,158 @@
+[
+  {
+    "nombre": "Sentadilla",
+    "descripcion": "Ejercicio fundamental para piernas y glúteos",
+    "categoria": "Piernas"
+  },
+  {
+    "nombre": "Prensa de piernas",
+    "descripcion": "Movimiento guiado para cuádriceps y glúteos",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Press banca",
+    "descripcion": "Ejercicio principal para el pectoral mayor",
+    "categoria": "Pecho"
+    
+  },
+  {
+    "nombre": "Press inclinado con mancuernas",
+    "descripcion": "Ejercicio para porción clavicular del pectoral",
+    "categoria": "Pecho"
+    
+  },
+  {
+    "nombre": "Remo con barra",
+    "descripcion": "Ejercicio de tracción horizontal para espalda",
+    "categoria": "Espalda"
+   
+  },
+  {
+    "nombre": "Jalón al pecho",
+    "descripcion": "Alternativa guiada al pull-up, trabaja dorsal ancho",
+    "categoria": "Espalda"
+   
+  },
+  {
+    "nombre":"remo en polea baja",
+    "descripcion": "Ejercicio de tracción horizontal para espalda",
+    "categoria": "Espalda"
+  },
+  {
+    "nombre" : " remo abierto",
+    "descripcion": "Ejercicio de tracción horizontal para espalda",
+    "categoria": "Espalda"
+  },
+  {
+    "nombre": "jalon cerrado",
+    "descripcion": "Ejercicio de tracción vertical para espalda",
+    "categoria": "Espalda"
+  },
+  {
+    "nombre": "face pull",
+    "descripcion": "Ejercicio para deltoides posterior y trapecio",
+    "categoria": "Hombros"
+  },
+  {
+    "nombre": "Dominadas",
+    "descripcion": "Ejercicio de tracción vertical para espalda y bíceps",
+    "categoria": "Espalda"
+    
+  },
+  {
+    "nombre": "Curl de bíceps con mancuernas",
+    "descripcion": "Ejercicio de aislamiento para bíceps",
+    "categoria": "Bíceps"
+    
+  },
+  {
+    "nombre": "curl martillo",
+    "descripcion": "Variante del curl para bíceps y braquial",
+    "categoria": "Bíceps"
+  },
+  {
+    "nombre": "Extensión de tríceps en polea alta",
+    "descripcion": "Ejercicio de aislamiento para tríceps",
+    "categoria": "Tríceps"
+    
+  },
+  {
+    "nombre": "Elevación de talones",
+    "descripcion": "Ejercicio para gemelos en posición de pie",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Plancha lateral",
+    "descripcion": "Variante de la plancha para trabajar oblicuos",
+    "categoria": "Abdomen"
+    
+  },
+  {
+    "nombre": "Fondos en banco",
+    "descripcion": "Ejercicio de empuje para tríceps y pectoral inferior",
+    "categoria": "Tríceps"
+    
+  },
+  {
+    "nombre": "Elevación de talones sentado",
+    "descripcion": "Ejercicio para gemelos en posición sentada",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Plancha",
+    "descripcion": "Ejercicio isométrico para fortalecer el core",
+    "categoria": "Abdomen"
+    
+  },
+  {
+    "nombre": "Press militar",
+    "descripcion": "Ejercicio de empuje para hombros",
+    "categoria": "Hombros"
+    
+  },
+  {
+    "nombre": "Peso muerto",
+    "descripcion": "Ejercicio compuesto para toda la cadena posterior",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Curl de piernas tumbado",
+    "descripcion": "Ejercicio de aislamiento para isquiotibiales",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Elevación de talones de pie",
+    "descripcion": "Ejercicio para gemelos en posición de pie",
+    "categoria": "Piernas"
+    
+  },
+  {
+    "nombre": "Curl de bíceps con barra",
+    "descripcion": "Ejercicio de aislamiento para bíceps",
+    "categoria": "Bíceps"
+   
+  },
+  {
+    "nombre": "Fondos en paralelas",
+    "descripcion": "Ejercicio corporal para tríceps y pectoral inferior",
+    "categoria": "Tríceps"
+    
+  },
+  {
+    "nombre": "Elevaciones laterales",
+    "descripcion": "Ejercicio para deltoides lateral",
+    "categoria": "Hombros"
+    
+  },
+  {
+    "nombre": "Crunch abdominal",
+    "descripcion": "Ejercicio clásico para abdominales rectos",
+    "categoria": "Abdomen"
+    
+  }
+]

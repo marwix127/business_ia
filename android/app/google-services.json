@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "596418964902",
+    "project_id": "stronger-f7c9c",
+    "storage_bucket": "stronger-f7c9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596418964902:android:32558367c60a1f0f447367",
+        "android_client_info": {
+          "package_name": "com.example.business_ia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIXbm7gQ2fHqRR9UKlmxvnlAZHQXaEkUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
