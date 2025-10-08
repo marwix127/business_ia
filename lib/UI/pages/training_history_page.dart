@@ -1,8 +1,8 @@
 import 'package:business_ia/UI/pages/training_detail_page.dart';
-import 'package:business_ia/UI/pages/training_page.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:business_ia/infrastructure/services/firebase/training_service.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class TrainingHistoryPage extends StatefulWidget {
   const TrainingHistoryPage({super.key});
@@ -22,12 +22,7 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
   }
 
   void _navigateToNewTraining() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const TrainingPage()),
-    );
-
-    // Si el usuario guardó algo, recarga la lista
+    final result = await context.push('/training');
     if (result != null) {
       setState(() {
         _trainingsFuture = _trainingService.getTrainings();
@@ -41,8 +36,8 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
       appBar: AppBar(title: const Text("Historial de entrenamientos")),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToNewTraining,
-        child: const Icon(Icons.add),
         tooltip: "Nuevo entrenamiento",
+        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<Training>>(
         future: _trainingsFuture,
@@ -71,11 +66,9 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TrainingDetailPage(training: training),
-                      ),
+                    final result = await context.push(
+                      '/training-detail',
+                      extra: training,
                     );
                     if (result == true) {
                       setState(() {

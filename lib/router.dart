@@ -1,4 +1,6 @@
+import 'package:business_ia/UI/pages/training_detail_page.dart';
 import 'package:business_ia/UI/widgets/main_scaffold.dart';
+import 'package:business_ia/models/training.dart';
 import 'package:go_router/go_router.dart';
 
 import 'UI/pages/training_history_page.dart';
@@ -44,6 +46,13 @@ GoRouter createRouter(AuthStateNotifier authState) {
         builder: (context, state) {
           final categoria = state.uri.queryParameters['categoria'] ?? '';
           return ExercisesByCategories(categoria: categoria);
+        },
+      ),
+      GoRoute(
+        path: '/training-detail',
+        builder: (context, state) {
+          final training = state.extra as Training;
+          return TrainingDetailPage(training: training);
         },
       ),
 
