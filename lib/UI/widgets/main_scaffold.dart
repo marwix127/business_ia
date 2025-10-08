@@ -32,18 +32,23 @@ class MainScaffold extends StatelessWidget {
           children: [
             DrawerHeader(child: Text(userEmail)),
             ListTile(
+              leading: const Icon(Icons.list),
+              title: const Text('Lista de ejercicios'),
+              onTap: () {
+                context.push('/add-exercise');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Ajustes'),
               onTap: () {
-                Navigator.pop(context);
-                context.go('/ajustes');
+                context.push('/ajustes');
               },
             ),
             ListTile(
               leading: const Icon(Icons.exit_to_app),
               title: const Text('Cerrar sesión'),
               onTap: () {
-                Navigator.pop(context);
                 AuthService().signOut();
                 context.go('/login');
               },

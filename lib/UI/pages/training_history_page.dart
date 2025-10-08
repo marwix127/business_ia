@@ -1,4 +1,3 @@
-import 'package:business_ia/UI/pages/training_detail_page.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:business_ia/infrastructure/services/firebase/training_service.dart';
 import 'package:flutter/material.dart';

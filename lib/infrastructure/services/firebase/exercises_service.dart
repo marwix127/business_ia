@@ -50,4 +50,17 @@ class EjercicioService {
       };
     }).toList();
   }
+
+  Future<void> agregarEjercicioPersonalizado(
+    Map<String, dynamic> ejercicio,
+  ) async {
+    await _db.collection('ejercicios2').add({
+      ...ejercicio,
+      'esPersonalizado': true,
+    });
+  }
+
+  Future<void> eliminarEjercicio(String id) async {
+    await _db.collection('ejercicios2').doc(id).delete();
+  }
 }

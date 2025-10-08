@@ -9,8 +9,10 @@ import 'infrastructure/services/firebase/exercises_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  await Firebase.initializeApp(
+    name: "dev project",
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final authState = AuthStateNotifier();
   router = createRouter(authState);
 
@@ -19,7 +21,7 @@ void main() async {
   runApp(ChangeNotifierProvider.value(value: authState, child: MyApp()));
 }
 
-class MyApp extends StatelessWidget { 
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
