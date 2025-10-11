@@ -1,5 +1,6 @@
 import 'package:business_ia/infrastructure/services/firebase/exercises_service.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'exercises_by_categories.dart';
 
 class ExercisesCategories extends StatefulWidget {
@@ -19,7 +20,17 @@ class _ExercisesCategoriesState extends State<ExercisesCategories> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Grupos musculares')),
+      appBar: AppBar(
+        title: const Text('Grupos musculares'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              context.push('/add-exercise');
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<List<String>>(
         future: obtenerCategorias(),
         builder: (context, snapshot) {

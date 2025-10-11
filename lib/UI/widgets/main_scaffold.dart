@@ -30,7 +30,27 @@ class MainScaffold extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(child: Text(userEmail)),
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 50, 47, 56),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundImage: AuthService().currentUser?.photoURL != null
+                        ? NetworkImage(AuthService().currentUser!.photoURL!)
+                        : null,
+                    child: AuthService().currentUser?.photoURL == null
+                        ? const Icon(Icons.person, size: 40)
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(userEmail, style: const TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.list),
               title: const Text('Lista de ejercicios'),

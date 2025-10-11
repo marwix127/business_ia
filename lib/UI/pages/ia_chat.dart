@@ -1,3 +1,4 @@
+import 'package:business_ia/infrastructure/services/openAPI_service.dart';
 import 'package:flutter/material.dart';
 
 class IaChatPage extends StatefulWidget {
@@ -11,25 +12,24 @@ class _IaChatPageState extends State<IaChatPage> {
   final TextEditingController _controller = TextEditingController();
   final List<_ChatMessage> _messages = [];
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
       _messages.add(_ChatMessage(text: text, isUser: true));
-      // Simulación de respuesta IA
-      _messages.add(
-        _ChatMessage(
-          text: """¡Genial! Aquí tienes una rutina equilibrada:
-Lunes: Pecho y tríceps
-Martes: Piernas y abdomen
-Jueves: Espalda y bíceps
-Viernes: Hombros y core
-¿Quieres enfocarte más en fuerza, hipertrofia o definición?""",
-          isUser: false,
-        ),
-      );
     });
     _controller.clear();
+
+    try {
+      final respuesta = await obtenerRespuestaIA(text);
+      setState(() {
+        _messages.add(_ChatMessage(text: respuesta, isUser: false));
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add(_ChatMessage(text: 'Error: $e', isUser: false));
+      });
+    }
   }
 
   @override
@@ -59,7 +59,7 @@ Viernes: Hombros y core
                   decoration: BoxDecoration(
                     color: msg.isUser
                         ? const Color.fromARGB(255, 255, 255, 255)
-                        : const Color.fromARGB(218, 170, 39, 209),
+                        : const Color.fromARGB(255, 195, 125, 216),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(18),
                       topRight: const Radius.circular(18),
