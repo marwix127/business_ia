@@ -53,9 +53,9 @@ class MainScaffold extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.list),
-              title: const Text('Lista de ejercicios'),
+              title: const Text('Ejercicios'),
               onTap: () {
-                context.push('/add-exercise');
+                context.push('/exercise-list');
               },
             ),
             ListTile(

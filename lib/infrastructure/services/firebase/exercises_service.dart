@@ -51,6 +51,14 @@ class EjercicioService {
     }).toList();
   }
 
+  Future<List<Map<String, dynamic>>> obtenerTodosLosEjercicios() async {
+    final snapshot = await _db.collection('ejercicios2').get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {'id': doc.id, ...data};
+    }).toList();
+  }
+
   Future<void> agregarEjercicioPersonalizado(
     Map<String, dynamic> ejercicio,
   ) async {

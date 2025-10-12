@@ -1,4 +1,5 @@
 import 'package:business_ia/UI/pages/add_exercise_page.dart';
+import 'package:business_ia/UI/pages/exercise_list_page.dart';
 import 'package:business_ia/UI/pages/training_detail_page.dart';
 import 'package:business_ia/UI/widgets/main_scaffold.dart';
 import 'package:business_ia/models/training.dart';
@@ -59,6 +60,10 @@ GoRouter createRouter(AuthStateNotifier authState) {
       GoRoute(
         path: '/add-exercise',
         builder: (context, state) => const AddExercisePage(),
+      ),
+      GoRoute(
+        path: '/exercise-list',
+        builder: (context, state) => const ExerciseListPage(),
       ),
 
       ShellRoute(
