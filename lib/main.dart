@@ -6,7 +6,6 @@ import 'firebase_options.dart';
 import 'theme/theme.dart';
 import 'infrastructure/services/firebase/auth_state_notifier.dart';
 import 'infrastructure/services/firebase/exercises_service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +17,7 @@ void main() async {
   router = createRouter(authState);
 
   EjercicioService().cargarEjerciciosInicialesSiEsNecesario();
-  await dotenv.load(fileName: "variables.env");
+
   runApp(ChangeNotifierProvider.value(value: authState, child: MyApp()));
 }
 

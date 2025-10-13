@@ -9,7 +9,7 @@ class MainScaffold extends StatelessWidget {
 
   static final tabs = [
     {'icon': Icons.home, 'label': 'Inicio', 'path': '/'},
-    {'icon': Icons.chat, 'label': 'Coach IA', 'path': '/ia-chat'},
+    {'icon': Icons.chat, 'label': 'IA Chat', 'path': '/ia-chat'},
     {'icon': Icons.bar_chart, 'label': 'Gráficos', 'path': '/grafics'},
   ];
 
@@ -80,7 +80,6 @@ class MainScaffold extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
         onTap: (index) => context.go(tabs[index]['path'] as String),
-        selectedItemColor: const Color.fromARGB(255, 86, 73, 202),
         items: tabs
             .map(
               (tab) => BottomNavigationBarItem(

@@ -77,7 +77,7 @@ GoRouter createRouter(AuthStateNotifier authState) {
           ),
           GoRoute(
             path: '/ia-chat',
-            builder: (context, state) => const IAChatPage(),
+            builder: (context, state) => const IaChatPage(),
           ),
           GoRoute(
             path: '/grafics',
