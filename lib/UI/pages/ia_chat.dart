@@ -1,128 +1,177 @@
-import 'package:business_ia/infrastructure/services/openAPI_service.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class IaChatPage extends StatefulWidget {
-  const IaChatPage({super.key});
+class IAChatPage extends StatefulWidget {
+  const IAChatPage({super.key});
 
   @override
-  State<IaChatPage> createState() => _IaChatPageState();
+  State<IAChatPage> createState() => _ChatPageState();
 }
 
-class _IaChatPageState extends State<IaChatPage> {
+class _ChatPageState extends State<IAChatPage> {
   final TextEditingController _controller = TextEditingController();
-  final List<_ChatMessage> _messages = [];
+  final List<Map<String, String>> _messages = [];
+  final uid = FirebaseAuth.instance.currentUser?.uid;
 
+  bool _loading = false;
+
+  // 🔹 Obtiene todos los entrenos guardados en Firestore
+  Future<String> _getEntrenos() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid) // Cambia esto si tienes autenticación
+        .collection('trainings')
+        .get();
+    final entrenos = snapshot.docs.map((d) {
+      final data = d.data();
+      // Convierte todos los Timestamp a String
+      data.forEach((key, value) {
+        if (value is Timestamp) {
+          data[key] = value.toDate().toIso8601String();
+        }
+      });
+      return data;
+    }).toList();
+
+    return jsonEncode(entrenos);
+  }
+
+  // 🔹 Envía el mensaje y los entrenos a Gemini
+  Future<String> _sendToGemini(String userMessage) async {
+    setState(() => _loading = true);
+
+    final entrenos = await _getEntrenos();
+    final apiKey = dotenv.env['GEMINI_API_KEY']!;
+    final url =
+        "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$apiKey";
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "contents": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "text":
+                    "Eres un entrenador personal virtual. Estos son mis entrenamientos en formato JSON: $entrenos. El usuario dice: $userMessage",
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    setState(() => _loading = false);
+
+    if (response.statusCode != 200) {
+      return "Error: ${response.statusCode} → ${response.body}";
+    }
+
+    final data = jsonDecode(response.body);
+
+    // 🔸 Gemini puede devolver la respuesta en distintos campos
+    final text = data["candidates"]?[0]?["content"]?["parts"]?[0]?["text"];
+    if (text != null) return text;
+
+    if (data["outputText"] != null) return data["outputText"];
+
+    return "No pude generar una respuesta. ${data.toString()}";
+  }
+
+  // 🔹 Envía el mensaje del usuario al chat
   void _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true));
-    });
-    _controller.clear();
 
-    try {
-      final respuesta = await obtenerRespuestaIA(text);
-      setState(() {
-        _messages.add(_ChatMessage(text: respuesta, isUser: false));
-      });
-    } catch (e) {
-      setState(() {
-        _messages.add(_ChatMessage(text: 'Error: $e', isUser: false));
-      });
-    }
+    setState(() {
+      _messages.add({"role": "user", "text": text});
+      _controller.clear();
+    });
+
+    final reply = await _sendToGemini(text);
+
+    setState(() {
+      _messages.add({"role": "ai", "text": reply});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            reverse: true,
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final msg = _messages[_messages.length - 1 - index];
-              return Align(
-                alignment: msg.isUser
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: _messages.length,
+              itemBuilder: (context, i) {
+                final msg = _messages[i];
+                final isUser = msg["role"] == "user";
+                return Container(
+                  alignment: isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: msg.isUser
-                        ? const Color.fromARGB(255, 255, 255, 255)
-                        : const Color.fromARGB(255, 195, 125, 216),
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(18),
-                      topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(msg.isUser ? 18 : 4),
-                      bottomRight: Radius.circular(msg.isUser ? 4 : 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser
+                          ? Colors.indigo
+                          : const Color.fromARGB(231, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      msg["text"]!,
+                      style: TextStyle(
+                        color: isUser ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
                   ),
-                  child: Text(
-                    msg.text,
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-        SafeArea(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Escribe tu mensaje...',
+                    decoration: const InputDecoration(
+                      hintText: "Escribe tu mensaje...",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
                       ),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: Colors.deepPurple,
-                  child: IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _sendMessage,
+                IconButton(
+                  icon: const Icon(
+                    Icons.send,
+                    color: const Color.fromARGB(255, 75, 63, 181),
                   ),
+                  onPressed: _sendMessage,
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
-}
-
-class _ChatMessage {
-  final String text;
-  final bool isUser;
-
-  _ChatMessage({required this.text, required this.isUser});
 }
