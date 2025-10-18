@@ -7,34 +7,52 @@ class GeminiService {
   final http.Client _client;
   GeminiService([http.Client? client]) : _client = client ?? http.Client();
 
+  // ...existing code...
   Future<String> generateReply(
     String userMessage, {
     required String uid,
+    int maxTrainings = 30, // <-- número máximo de entrenamientos a considerar
+    bool includeSummary = true,
   }) async {
-    // recoge entrenos y convierte Timestamp a ISO strings
+    // recoge solo los últimos `maxTrainings` ordenados por fecha descendente
     final snapshot = await FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
         .collection('trainings')
+        .orderBy('date', descending: true)
+        .limit(maxTrainings)
         .get();
 
+    // mapear a un shape mínimo para reducir tamaño y convertir Timestamp
     final entrenos = snapshot.docs.map((d) {
       final data = Map<String, dynamic>.from(d.data());
-      data.forEach((k, v) {
-        if (v is Timestamp) data[k] = v.toDate().toIso8601String();
-        if (v is List) {
-          // opcional: convertir timestamps dentro de listas/ejercicios
-          for (var item in v) {
-            if (item is Map) {
-              item.forEach((ik, iv) {
-                if (iv is Timestamp) item[ik] = iv.toDate().toIso8601String();
-              });
-            }
-          }
-        }
-      });
-      return data;
+      return {
+        'id': d.id,
+        'name': data['name'] ?? data['nombre'],
+        'date': (data['date'] is Timestamp)
+            ? (data['date'] as Timestamp).toDate().toIso8601String()
+            : data['date']?.toString(),
+        // incluye sólo lo imprescindible de ejercicios/series
+        'exercises':
+            (data['exercises'] as List<dynamic>?)
+                ?.map(
+                  (e) => {
+                    'name': e['name'] ?? e['nombre'],
+                    'series_count':
+                        (e['series'] as List<dynamic>?)?.length ?? 0,
+                    // opcional: volumen estimado
+                  },
+                )
+                .toList() ??
+            [],
+      };
     }).toList();
+
+    // generar resumen pequeño si se desea (opcional, evita mandar todo)
+    String resumen = '';
+    if (includeSummary) {
+      resumen = _simpleSummary(entrenos);
+    }
 
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null || apiKey.isEmpty) {
@@ -44,15 +62,20 @@ class GeminiService {
     final url =
         'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$apiKey';
 
+    final prompt = StringBuffer()
+      ..writeln('Eres un entrenador personal virtual.')
+      ..writeln('Resumen de entrenamientos (últimos ${entrenos.length}):')
+      ..writeln(resumen)
+      ..writeln(
+        'Si necesitas ejemplos concretos, pide al usuario que lo confirme. Usuario pregunta: $userMessage',
+      );
+
     final body = {
       "contents": [
         {
           "role": "user",
           "parts": [
-            {
-              "text":
-                  "Eres un entrenador personal virtual. Estos son mis entrenamientos en formato JSON: ${jsonEncode(entrenos)}. El usuario dice: $userMessage",
-            },
+            {"text": prompt.toString()},
           ],
         },
       ],
@@ -75,5 +98,24 @@ class GeminiService {
         '';
 
     return text;
+  }
+
+  String _simpleSummary(List<Map<String, dynamic>> entrenos) {
+    if (entrenos.isEmpty) return 'No hay entrenamientos registrados.';
+    final sesiones = entrenos.length;
+    final ejercicioCounts = <String, int>{};
+    for (final t in entrenos) {
+      final exs = t['exercises'] as List<dynamic>;
+      for (final e in exs) {
+        final name = (e['name'] ?? 'unknown').toString();
+        ejercicioCounts[name] = (ejercicioCounts[name] ?? 0) + 1;
+      }
+    }
+    final top = ejercicioCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topText = top.isEmpty
+        ? '–'
+        : top.take(3).map((e) => '${e.key} (${e.value})').join(', ');
+    return 'Sesiones (últimas): $sesiones. Ejercicios más frecuentes: $topText.';
   }
 }
