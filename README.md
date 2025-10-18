@@ -1,16 +1,42 @@
-# business_ia
+# 💪 Stronger — Fitness & IA Coach App
 
-A new Flutter project.
+**Stronger** es una aplicación móvil desarrollada en **Flutter** que combina el seguimiento de entrenamientos, análisis de progreso y asistencia inteligente mediante IA.  
+El objetivo es ofrecer una experiencia personalizada para cada usuario, permitiéndole registrar, analizar y mejorar su rendimiento físico día a día.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Características principales
 
-A few resources to get you started if this is your first Flutter project:
+- 🔐 **Autenticación segura con Firebase Auth** (registro e inicio de sesión por email).
+- 🏋️‍♂️ **Gestión de entrenamientos personalizados**:
+  - Crear entrenamientos con ejercicios y series personalizadas.
+  - Añadir, editar o eliminar ejercicios fácilmente.
+- 📊 **Historial de entrenamientos**:
+  - Visualiza tus sesiones anteriores.
+  - Accede al detalle de cada entrenamiento.
+- 📈 **Análisis de progreso**:
+  - Gráficos de evolución del volumen por ejercicio.
+  - Seguimiento de rendimiento y métricas corporales.
+- 🤖 **Asistente con IA**:
+  - Chat integrado que analiza tu progreso.
+  - Responde preguntas sobre rutinas, objetivos o evolución.
+- ☁️ **Sincronización en la nube** con **Firebase Firestore**.
+- 🎨 **UI limpia y moderna**, con navegación mediante `GoRouter`.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠️ Tecnologías utilizadas
+
+| Categoría | Tecnologías |
+|------------|-------------|
+| **Frontend** | Flutter (Dart) |
+| **Backend** | Firebase (Auth, Firestore) |
+| **Estado** | ChangeNotifier / Provider |
+| **Rutas** | GoRouter |
+| **IA (opcional)** | OpenAI / Hugging Face API |
+| **Gráficos** | fl_chart o charts_flutter (según preferencia) |
+
+---
+
+## 🧩 Estructura del proyecto
+
