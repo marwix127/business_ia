@@ -77,18 +77,26 @@ class MainScaffold extends StatelessWidget {
         ),
       ),
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
-        onTap: (index) => context.go(tabs[index]['path'] as String),
-        selectedItemColor: const Color.fromARGB(255, 86, 73, 202),
-        items: tabs
-            .map(
-              (tab) => BottomNavigationBarItem(
-                icon: Icon(tab['icon'] as IconData),
-                label: tab['label'] as String,
-              ),
-            )
-            .toList(),
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed, // evita el "shifting"
+          enableFeedback: false, // quita el feedback táctil
+          currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
+          onTap: (index) => context.go(tabs[index]['path'] as String),
+          selectedItemColor: Color.fromARGB(255, 120, 62, 153),
+          items: tabs
+              .map(
+                (tab) => BottomNavigationBarItem(
+                  icon: Icon(tab['icon'] as IconData),
+                  label: tab['label'] as String,
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }

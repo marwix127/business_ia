@@ -32,7 +32,7 @@ class AppTheme {
       ),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: Color.fromARGB(255, 63, 181, 83),
+      backgroundColor: Color.fromARGB(255, 72, 37, 92),
     ),
   );
 
@@ -40,7 +40,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primarySwatch: Colors.indigo,
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: Color.fromARGB(255, 63, 181, 83),
+      backgroundColor: Color.fromARGB(255, 72, 37, 92),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
