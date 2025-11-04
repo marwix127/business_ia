@@ -30,6 +30,8 @@ class _ExerciseListPageState extends State<ExerciseListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -57,7 +59,7 @@ class _ExerciseListPageState extends State<ExerciseListPage> {
                 title: Text(ejercicio['nombre']),
                 subtitle: Text(ejercicio['descripcion'] ?? ''),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: Icon(Icons.delete, color: colorScheme.error),
                   onPressed: () async {
                     // Confirma antes de eliminar
                     final confirm = await showDialog<bool>(

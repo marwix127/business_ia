@@ -5,7 +5,7 @@ import 'package:business_ia/UI/widgets/main_scaffold.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:go_router/go_router.dart';
 
-import 'UI/pages/training_history_page.dart';
+import 'UI/pages/trainings_history_page.dart';
 import 'UI/pages/login_page.dart';
 import 'UI/pages/register_page.dart';
 import 'infrastructure/services/firebase/auth_state_notifier.dart';

@@ -8,6 +8,7 @@ class VolumenChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     data.sort((a, b) => a['date'].compareTo(b['date']));
 
     return LineChart(
@@ -40,7 +41,7 @@ class VolumenChart extends StatelessWidget {
             ],
             isCurved: true,
             barWidth: 3,
-            color: Colors.deepPurple,
+            color: colorScheme.primary,
             dotData: FlDotData(show: true),
           ),
         ],

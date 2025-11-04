@@ -117,6 +117,8 @@ class _ChatPageState extends State<IAChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Column(
         children: [
@@ -137,15 +139,15 @@ class _ChatPageState extends State<IAChatPage> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isUser
-                          ? Colors.indigo
-                          : const Color.fromARGB(231, 255, 255, 255),
+                      color: isUser ? colorScheme.primary : colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       msg["text"] ?? '',
                       style: TextStyle(
-                        color: isUser ? Colors.white : Colors.black87,
+                        color: isUser
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.normal,
                       ),
@@ -177,10 +179,7 @@ class _ChatPageState extends State<IAChatPage> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
-                    Icons.send,
-                    color: Color.fromARGB(255, 75, 63, 181),
-                  ),
+                  icon: Icon(Icons.send, color: colorScheme.primary),
                   onPressed: _sendMessage,
                 ),
               ],

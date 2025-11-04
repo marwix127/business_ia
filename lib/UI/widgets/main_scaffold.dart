@@ -24,6 +24,8 @@ class MainScaffold extends StatelessWidget {
     String appBarTitle =
         tabs[selectedIndex >= 0 ? selectedIndex : 0]['label'] as String;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: Text(appBarTitle)),
       drawer: Drawer(
@@ -31,8 +33,8 @@ class MainScaffold extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 50, 47, 56),
+              decoration: BoxDecoration(
+                color: colorScheme.surface.withAlpha(240),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -47,13 +49,19 @@ class MainScaffold extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(height: 12),
-                  Text(userEmail, style: const TextStyle(color: Colors.white)),
+                  Text(
+                    userEmail,
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
                 ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.list),
               title: const Text('Ejercicios'),
+              selected: currentLocation == '/exercise-list',
+              selectedColor: colorScheme.primary,
+              selectedTileColor: colorScheme.primary.withAlpha(31),
               onTap: () {
                 context.push('/exercise-list');
               },
@@ -61,6 +69,9 @@ class MainScaffold extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Ajustes'),
+              selected: currentLocation == '/ajustes',
+              selectedColor: colorScheme.primary,
+              selectedTileColor: colorScheme.primary.withAlpha(31),
               onTap: () {
                 context.push('/ajustes');
               },
@@ -80,14 +91,15 @@ class MainScaffold extends StatelessWidget {
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           splashFactory: NoSplash.splashFactory,
-          highlightColor: Colors.transparent,
+          highlightColor: const Color.fromARGB(0, 0, 0, 0),
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed, // evita el "shifting"
           enableFeedback: false, // quita el feedback táctil
           currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
           onTap: (index) => context.go(tabs[index]['path'] as String),
-          selectedItemColor: Color.fromARGB(255, 120, 62, 153),
+          selectedItemColor: colorScheme.primary,
+          unselectedItemColor: colorScheme.onSurface.withAlpha(153),
           items: tabs
               .map(
                 (tab) => BottomNavigationBarItem(

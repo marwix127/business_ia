@@ -27,12 +27,17 @@ class TrainingService {
   Future<void> saveTraining(Training training) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception('No user logged in');
-
-    await _db
+    final trainingsRef = _db
         .collection('users')
         .doc(uid)
-        .collection('trainings')
-        .add(training.toMap());
+        .collection('trainings');
+
+    // If training has an id, update that document; otherwise add a new one.
+    if (training.id.isNotEmpty) {
+      await trainingsRef.doc(training.id).set(training.toMap());
+    } else {
+      await trainingsRef.add(training.toMap());
+    }
   }
 
   Future<void> deleteTraining(Training training) async {

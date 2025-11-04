@@ -31,11 +31,14 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Historial de entrenamientos")),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToNewTraining,
         tooltip: "Nuevo entrenamiento",
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<Training>>(
