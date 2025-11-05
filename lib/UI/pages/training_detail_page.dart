@@ -325,62 +325,72 @@ class _TrainingDetailPageState extends State<TrainingDetailPage> {
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: ejercicio.series.length,
                                   itemBuilder: (context, j) {
-                                    return Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextFormField(
-                                            initialValue: ejercicio
-                                                .series[j]
-                                                .weight
-                                                .toString(),
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Peso (kg)',
-                                              hintText: 'Ej: 20',
-                                            ),
-                                            onChanged: (value) => updateSeries(
-                                              i,
-                                              j,
-                                              'weight',
-                                              value,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: TextFormField(
-                                            initialValue: ejercicio
-                                                .series[j]
-                                                .repetitions
-                                                .toString(),
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Reps',
-                                              hintText: 'Ej: 10',
-                                            ),
-                                            onChanged: (value) => updateSeries(
-                                              i,
-                                              j,
-                                              'reps',
-                                              value,
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6.0,
+                                      ), // ← separación vertical
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              initialValue: ejercicio
+                                                  .series[j]
+                                                  .weight
+                                                  .toString(),
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Peso (kg)',
+                                                hintText: 'Ej: 20',
+                                              ),
+                                              onChanged: (value) =>
+                                                  updateSeries(
+                                                    i,
+                                                    j,
+                                                    'weight',
+                                                    value,
+                                                  ),
                                             ),
                                           ),
-                                        ),
-                                        IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              ejercicio.series.removeAt(j);
-                                            });
-                                          },
-                                          icon: Icon(
-                                            Icons.remove_circle,
-                                            color: colorScheme.error,
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: TextFormField(
+                                              initialValue: ejercicio
+                                                  .series[j]
+                                                  .repetitions
+                                                  .toString(),
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Reps',
+                                                hintText: 'Ej: 10',
+                                              ),
+                                              onChanged: (value) =>
+                                                  updateSeries(
+                                                    i,
+                                                    j,
+                                                    'reps',
+                                                    value,
+                                                  ),
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                ejercicio.series.removeAt(j);
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.remove_circle,
+                                              color: colorScheme.error,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),
+
                                 const SizedBox(height: 8),
                                 TextButton.icon(
                                   onPressed: () {

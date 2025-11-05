@@ -220,54 +220,64 @@ class _TrainingPageState extends State<TrainingPage>
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: ejercicio.series.length,
                                   itemBuilder: (context, j) {
-                                    return Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Peso (kg)',
-                                              hintText: 'Ej: 20',
-                                            ),
-                                            onChanged: (value) => updateSeries(
-                                              i,
-                                              j,
-                                              'weight',
-                                              value,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: TextFormField(
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Reps',
-                                              hintText: 'Ej: 10',
-                                            ),
-                                            onChanged: (value) => updateSeries(
-                                              i,
-                                              j,
-                                              'reps',
-                                              value,
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6.0,
+                                      ), // ← separación vertical
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Peso (kg)',
+                                                hintText: 'Ej: 20',
+                                              ),
+                                              onChanged: (value) =>
+                                                  updateSeries(
+                                                    i,
+                                                    j,
+                                                    'weight',
+                                                    value,
+                                                  ),
                                             ),
                                           ),
-                                        ),
-                                        IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              ejercicio.series.removeAt(j);
-                                            });
-                                          },
-                                          icon: const Icon(
-                                            Icons.remove_circle,
-                                            color: Colors.red,
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: TextFormField(
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'Reps',
+                                                hintText: 'Ej: 10',
+                                              ),
+                                              onChanged: (value) =>
+                                                  updateSeries(
+                                                    i,
+                                                    j,
+                                                    'reps',
+                                                    value,
+                                                  ),
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                ejercicio.series.removeAt(j);
+                                              });
+                                            },
+                                            icon: const Icon(
+                                              Icons.remove_circle,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),
+
                                 const SizedBox(height: 8),
                                 TextButton.icon(
                                   onPressed: () {
