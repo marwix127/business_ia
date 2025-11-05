@@ -19,6 +19,60 @@ class _TrainingDetailPageState extends State<TrainingDetailPage> {
   late List<SelectedExercise> editableExercises;
   final TrainingService _trainingService = TrainingService();
 
+  bool get _hasUnsavedChanges {
+    if (_nameController.text != widget.training.name) return true;
+    if (_weightController.text != (widget.training.weight?.toString() ?? ''))
+      return true;
+    if (editableExercises.length != widget.training.exercises.length)
+      return true;
+
+    // Comprobar si los ejercicios o sus series han cambiado
+    for (var i = 0; i < editableExercises.length; i++) {
+      final edited = editableExercises[i];
+      final original = widget.training.exercises[i];
+
+      if (edited.id != original.id ||
+          edited.series.length != original.series.length) {
+        return true;
+      }
+
+      for (var j = 0; j < edited.series.length; j++) {
+        if (edited.series[j].weight != original.series[j].weight ||
+            edited.series[j].repetitions != original.series[j].repetitions) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  Future<bool> _confirmExit() async {
+    if (!_hasUnsavedChanges) return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Salir sin guardar?'),
+        content: const Text(
+          'Hay cambios sin guardar. ¿Estás seguro de que quieres salir?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,6 +239,14 @@ class _TrainingDetailPageState extends State<TrainingDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            if (await _confirmExit()) {
+              if (mounted) Navigator.pop(context);
+            }
+          },
+        ),
         title: const Text('Editar entrenamiento'),
         actions: [
           IconButton(icon: const Icon(Icons.delete), onPressed: _confirmDelete),

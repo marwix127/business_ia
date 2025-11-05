@@ -4,6 +4,7 @@ import 'package:business_ia/models/serie.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:business_ia/infrastructure/services/local/training_draft_service.dart';
 import 'exercises_categories.dart';
 
 class TrainingPage extends StatefulWidget {
@@ -13,10 +14,43 @@ class TrainingPage extends StatefulWidget {
   State<TrainingPage> createState() => _TrainingPageState();
 }
 
-class _TrainingPageState extends State<TrainingPage> {
+class _TrainingPageState extends State<TrainingPage>
+    with WidgetsBindingObserver {
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _pesoController = TextEditingController();
   final List<SelectedExercise> selectedExercises = [];
+
+  bool get _hasUnsavedChanges {
+    return _nombreController.text.isNotEmpty ||
+        _pesoController.text.isNotEmpty ||
+        selectedExercises.isNotEmpty;
+  }
+
+  Future<bool> _confirmExit() async {
+    if (!_hasUnsavedChanges) return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Salir sin guardar?'),
+        content: const Text(
+          'Hay cambios sin guardar. ¿Estás seguro de que quieres salir?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
+  }
 
   void addExercise(Map<String, dynamic> ejercicio) {
     final alreadyAdded = selectedExercises.any((e) => e.id == ejercicio['id']);
@@ -60,11 +94,43 @@ class _TrainingPageState extends State<TrainingPage> {
     });
   }
 
+  final TrainingDraftService _draftService = TrainingDraftService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nombreController.dispose();
     _pesoController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Save draft when app goes to background or is paused
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _saveDraft();
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    final data = {
+      'name': _nombreController.text,
+      'weight': _pesoController.text,
+      'exercises': selectedExercises.map((e) => e.toMap()).toList(),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    try {
+      await _draftService.saveDraft(data);
+    } catch (_) {
+      // ignore save errors
+    }
   }
 
   @override
@@ -73,7 +139,11 @@ class _TrainingPageState extends State<TrainingPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () async {
+            if (await _confirmExit()) {
+              if (mounted) context.pop();
+            }
+          },
         ),
         title: const Text('Entrenamiento'),
       ),
@@ -261,6 +331,10 @@ class _TrainingPageState extends State<TrainingPage> {
 
                       try {
                         await TrainingService().saveTraining(training);
+                        // remove any saved draft now that we've persisted
+                        try {
+                          await _draftService.removeDraft();
+                        } catch (_) {}
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text("Entrenamiento guardado con éxito"),
