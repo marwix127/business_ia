@@ -1,6 +1,5 @@
 import 'package:business_ia/UI/pages/add_exercise_page.dart';
 import 'package:business_ia/UI/pages/exercise_list_page.dart';
-import 'package:business_ia/UI/pages/training_detail_page.dart';
 import 'package:business_ia/UI/widgets/main_scaffold.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +36,10 @@ GoRouter createRouter(AuthStateNotifier authState) {
       ),
       GoRoute(
         path: '/training',
-        builder: (context, state) => const TrainingPage(),
+        builder: (context, state) {
+          final training = state.extra as Training?;
+          return TrainingPage(training: training);
+        },
       ),
       GoRoute(
         path: '/categories',
@@ -50,13 +52,7 @@ GoRouter createRouter(AuthStateNotifier authState) {
           return ExercisesByCategories(categoria: categoria);
         },
       ),
-      GoRoute(
-        path: '/training-detail',
-        builder: (context, state) {
-          final training = state.extra as Training;
-          return TrainingDetailPage(training: training);
-        },
-      ),
+
       GoRoute(
         path: '/add-exercise',
         builder: (context, state) => const AddExercisePage(),
@@ -88,3 +84,6 @@ GoRouter createRouter(AuthStateNotifier authState) {
     ],
   );
 }
+
+
+

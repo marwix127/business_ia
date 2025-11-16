@@ -11,7 +11,7 @@ class SelectedExercise {
     required this.name,
     required this.category,
     List<Series>? series,
-  }) : series = series ?? [Series(repetitions: 10, weight: 0)];
+  }) : series = series ?? [Series(repetitions: 0, weight: 0)];
 
   Map<String, dynamic> toMap() {
     return {

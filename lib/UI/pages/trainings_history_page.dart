@@ -69,7 +69,7 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
                     final result = await context.push(
-                      '/training-detail',
+                      '/training',
                       extra: training,
                     );
                     if (result == true) {
@@ -87,3 +87,4 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
     );
   }
 }
+

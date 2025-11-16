@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:business_ia/infrastructure/services/firebase/auth_service.dart';
+import 'package:business_ia/infrastructure/services/theme_notifier.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget child;
@@ -13,7 +14,6 @@ class MainScaffold extends StatelessWidget {
     {'icon': Icons.bar_chart, 'label': 'Gráficos', 'path': '/grafics'},
   ];
 
-  // Removed invalid getter that used 'context' outside of a method.
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.toString();
@@ -25,6 +25,8 @@ class MainScaffold extends StatelessWidget {
         tabs[selectedIndex >= 0 ? selectedIndex : 0]['label'] as String;
 
     final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+    final themeNotifier = ThemeNotifier();
 
     return Scaffold(
       appBar: AppBar(title: Text(appBarTitle)),
@@ -66,6 +68,25 @@ class MainScaffold extends StatelessWidget {
                 context.push('/exercise-list');
               },
             ),
+            // Switch de tema
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeNotifier,
+              builder: (context, themeMode, _) {
+                final isDark =
+                    themeMode == ThemeMode.dark ||
+                    (themeMode == ThemeMode.system &&
+                        brightness == Brightness.dark);
+
+                return ListTile(
+                  leading: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                  title: const Text('Tema oscuro'),
+                  trailing: Switch(
+                    value: isDark,
+                    onChanged: (_) => themeNotifier.toggleTheme(brightness),
+                  ),
+                );
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Ajustes'),
@@ -94,8 +115,8 @@ class MainScaffold extends StatelessWidget {
           highlightColor: const Color.fromARGB(0, 0, 0, 0),
         ),
         child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed, // evita el "shifting"
-          enableFeedback: false, // quita el feedback táctil
+          type: BottomNavigationBarType.fixed,
+          enableFeedback: false,
           currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
           onTap: (index) => context.go(tabs[index]['path'] as String),
           selectedItemColor: colorScheme.primary,
