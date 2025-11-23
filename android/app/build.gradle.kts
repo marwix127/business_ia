@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.business_ia"
+    namespace = "com.example.Stronger(+IA)"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
