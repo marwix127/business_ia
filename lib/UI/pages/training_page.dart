@@ -4,7 +4,6 @@ import 'package:business_ia/models/serie.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import 'exercises_categories.dart';
 
 class TrainingPage extends StatefulWidget {
@@ -22,6 +21,7 @@ class _TrainingPageState extends State<TrainingPage>
   final TextEditingController _pesoController = TextEditingController();
   List<SelectedExercise> exercises = [];
   final TrainingService _trainingService = TrainingService();
+  final Map<String, List<Series>> _exerciseHints = {};
 
   bool get _isEditing => widget.training != null;
 
@@ -66,6 +66,12 @@ class _TrainingPageState extends State<TrainingPage>
     return false;
   }
 
+  double? _parseDecimal(String value) {
+    // Reemplazar coma por punto para permitir ambos formatos
+    final normalizedValue = value.trim().replaceAll(',', '.');
+    return double.tryParse(normalizedValue);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +110,31 @@ class _TrainingPageState extends State<TrainingPage>
               )
               .toList()
         : [];
+
+    // Load hints for all exercises
+    for (var exercise in exercises) {
+      _loadHints(exercise.id);
+    }
+  }
+
+  Future<void> _loadHints(String exerciseId) async {
+    if (_exerciseHints.containsKey(exerciseId)) return;
+
+    try {
+      final lastSeries = await _trainingService.getLastSeriesForExercise(
+        exerciseId,
+      );
+      if (lastSeries != null && mounted) {
+        setState(() {
+          _exerciseHints[exerciseId] = lastSeries;
+        });
+      } else {
+        // Optional: Log that no history was found
+        print('No history found for exercise $exerciseId');
+      }
+    } catch (e) {
+      print('Error loading hints for $exerciseId: $e');
+    }
   }
 
   @override
@@ -168,6 +199,7 @@ class _TrainingPageState extends State<TrainingPage>
         ),
       );
     });
+    _loadHints(ejercicio['id']);
   }
 
   Future<void> _startExerciseSelection() async {
@@ -190,7 +222,7 @@ class _TrainingPageState extends State<TrainingPage>
     setState(() {
       final serie = exercises[exerciseIndex].series[seriesIndex];
       if (field == 'weight') {
-        serie.weight = double.tryParse(value) ?? 0;
+        serie.weight = _parseDecimal(value) ?? 0;
       } else {
         serie.repetitions = int.tryParse(value) ?? 0;
       }
@@ -237,7 +269,7 @@ class _TrainingPageState extends State<TrainingPage>
 
   Future<void> _saveTraining() async {
     final name = _nombreController.text.trim();
-    final weight = double.tryParse(_pesoController.text.trim());
+    final weight = _parseDecimal(_pesoController.text.trim());
 
     if (name.isEmpty || exercises.isEmpty) {
       _showSnackBar('Añade un nombre y al menos un ejercicio.');
@@ -335,6 +367,7 @@ class _TrainingPageState extends State<TrainingPage>
       itemCount: exercises.length,
       itemBuilder: (context, i) => _ExerciseCard(
         exercise: exercises[i],
+        hints: _exerciseHints[exercises[i].id],
         isEditing: _isEditing,
         onDelete: () => setState(() => exercises.removeAt(i)),
         onUpdateSeries: (seriesIndex, field, value) =>
@@ -378,6 +411,7 @@ class _TrainingPageState extends State<TrainingPage>
 // Widget extraído para ejercicios
 class _ExerciseCard extends StatelessWidget {
   final SelectedExercise exercise;
+  final List<Series>? hints;
   final bool isEditing;
   final VoidCallback onDelete;
   final VoidCallback onAddSeries;
@@ -386,6 +420,7 @@ class _ExerciseCard extends StatelessWidget {
 
   const _ExerciseCard({
     required this.exercise,
+    this.hints,
     required this.isEditing,
     required this.onDelete,
     required this.onAddSeries,
@@ -417,17 +452,56 @@ class _ExerciseCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
+            // Headers for columns
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Peso (kg)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Reps',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Space for delete button
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: exercise.series.length,
-              itemBuilder: (context, j) => _SeriesRow(
-                series: exercise.series[j],
-                isEditing: isEditing,
-                onWeightChanged: (value) => onUpdateSeries(j, 'weight', value),
-                onRepsChanged: (value) => onUpdateSeries(j, 'reps', value),
-                onRemove: () => onRemoveSeries(j),
-              ),
+              itemBuilder: (context, j) {
+                final hint = (hints != null && j < hints!.length)
+                    ? hints![j]
+                    : null;
+                return _SeriesRow(
+                  series: exercise.series[j],
+                  hintWeight: hint?.weight,
+                  hintReps: hint?.repetitions,
+                  isEditing: isEditing,
+                  onWeightChanged: (value) =>
+                      onUpdateSeries(j, 'weight', value),
+                  onRepsChanged: (value) => onUpdateSeries(j, 'reps', value),
+                  onRemove: () => onRemoveSeries(j),
+                );
+              },
             ),
             const SizedBox(height: 8),
             TextButton.icon(
@@ -445,6 +519,8 @@ class _ExerciseCard extends StatelessWidget {
 // Widget extraído para filas de series
 class _SeriesRow extends StatelessWidget {
   final Series series;
+  final double? hintWeight;
+  final int? hintReps;
   final bool isEditing;
   final Function(String) onWeightChanged;
   final Function(String) onRepsChanged;
@@ -452,6 +528,8 @@ class _SeriesRow extends StatelessWidget {
 
   const _SeriesRow({
     required this.series,
+    this.hintWeight,
+    this.hintReps,
     required this.isEditing,
     required this.onWeightChanged,
     required this.onRepsChanged,
@@ -470,9 +548,10 @@ class _SeriesRow extends StatelessWidget {
                   ? series.weight.toString()
                   : null,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Peso (kg)',
-                hintText: 'Ej: 20',
+              decoration: InputDecoration(
+                labelText: hintWeight != null ? '$hintWeight' : 'Peso (kg)',
+                hintText: hintWeight != null ? '$hintWeight' : '0',
+                floatingLabelBehavior: FloatingLabelBehavior.never,
               ),
               onChanged: onWeightChanged,
             ),
@@ -484,9 +563,10 @@ class _SeriesRow extends StatelessWidget {
                   ? series.repetitions.toString()
                   : null,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Reps',
-                hintText: 'Ej: 10',
+              decoration: InputDecoration(
+                labelText: hintReps != null ? '$hintReps' : 'Reps',
+                hintText: hintReps != null ? '$hintReps' : '0',
+                floatingLabelBehavior: FloatingLabelBehavior.never,
               ),
               onChanged: onRepsChanged,
             ),

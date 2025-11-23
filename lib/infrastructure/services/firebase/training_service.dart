@@ -2,10 +2,46 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../models/training.dart';
+import '../../../models/serie.dart';
 
 class TrainingService {
   final _db = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+
+  Future<List<Series>?> getLastSeriesForExercise(String exerciseId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return null;
+
+    // Get last 50 trainings to find the most recent one with this exercise
+    final snap = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('trainings')
+        .orderBy('date', descending: true)
+        .limit(50)
+        .get();
+
+    for (var doc in snap.docs) {
+      final data = doc.data();
+      final exercisesList = data['exercises'] as List<dynamic>?;
+
+      if (exercisesList != null) {
+        // Check if this training contains the exercise
+        final exerciseData = exercisesList.firstWhere(
+          (e) => e['exerciseId'] == exerciseId,
+          orElse: () => null,
+        );
+
+        if (exerciseData != null) {
+          final seriesList = exerciseData['series'] as List<dynamic>?;
+          if (seriesList != null) {
+            return seriesList.map((s) => Series.fromMap(s)).toList();
+          }
+        }
+      }
+    }
+    return null;
+  }
 
   Future<List<Training>> getTrainings() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;

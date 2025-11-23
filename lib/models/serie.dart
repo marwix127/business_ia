@@ -6,7 +6,7 @@ class Series {
 
   factory Series.fromMap(Map<String, dynamic> map) {
     return Series(
-      repetitions: map['repetitions'],
+      repetitions: (map['repetitions'] ?? 0) as int,
       weight: (map['weight'] ?? 0).toDouble(),
     );
   }
