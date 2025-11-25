@@ -3,6 +3,7 @@ import 'package:business_ia/models/selected_exercise.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:flutter/material.dart';
 import 'package:business_ia/UI/widgets/volume_chart.dart';
+import 'package:business_ia/UI/widgets/average_weight.dart';
 
 List<Map<String, dynamic>> calcularVolumenPorEjercicio(
   List<Training> trainings,
@@ -27,6 +28,34 @@ List<Map<String, dynamic>> calcularVolumenPorEjercicio(
       .toList();
 }
 
+List<Map<String, dynamic>> calcularPesoMedioPorEjercicio(
+  List<Training> trainings,
+  String nombreEjercicio,
+) {
+  return trainings
+      .map((training) {
+        final ejercicio = training.exercises.firstWhere(
+          (e) => e.name.toLowerCase() == nombreEjercicio.toLowerCase(),
+          orElse: () =>
+              SelectedExercise(id: '', name: '', category: '', series: []),
+        );
+
+        if (ejercicio.series.isEmpty) {
+          return {'date': training.date, 'average_weight': 0.0};
+        }
+
+        final totalWeight = ejercicio.series.fold<double>(
+          0,
+          (total, serie) => total + serie.weight,
+        );
+        final average = totalWeight / ejercicio.series.length;
+
+        return {'date': training.date, 'average_weight': average};
+      })
+      .where((e) => (e['average_weight'] as num) > 0)
+      .toList();
+}
+
 class GraficsPage extends StatefulWidget {
   const GraficsPage({super.key});
 
@@ -37,6 +66,7 @@ class GraficsPage extends StatefulWidget {
 class _GraficsPageState extends State<GraficsPage> {
   List<Training> trainings = [];
   String? selectedExercise;
+  String chartType = 'Volumen';
   bool loading = true;
 
   @override
@@ -70,9 +100,11 @@ class _GraficsPageState extends State<GraficsPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final volumenData = selectedExercise == null
+    final chartData = selectedExercise == null
         ? []
-        : calcularVolumenPorEjercicio(trainings, selectedExercise!);
+        : chartType == 'Volumen'
+        ? calcularVolumenPorEjercicio(trainings, selectedExercise!)
+        : calcularPesoMedioPorEjercicio(trainings, selectedExercise!);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Volumen de Entrenamiento")),
@@ -92,13 +124,28 @@ class _GraficsPageState extends State<GraficsPage> {
               },
             ),
             const SizedBox(height: 20),
-            if (volumenData.isEmpty)
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Volumen', label: Text('Volumen')),
+                ButtonSegment(value: 'Peso Medio', label: Text('Peso Medio')),
+              ],
+              selected: {chartType},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() {
+                  chartType = newSelection.first;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            if (chartData.isEmpty)
               const Text("No hay datos para este ejercicio")
             else
               Expanded(
-                child: VolumenChart(
-                  data: volumenData.cast<Map<String, dynamic>>(),
-                ),
+                child: chartType == 'Volumen'
+                    ? VolumenChart(data: chartData.cast<Map<String, dynamic>>())
+                    : AverageWeightChart(
+                        data: chartData.cast<Map<String, dynamic>>(),
+                      ),
               ),
           ],
         ),
