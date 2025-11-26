@@ -39,4 +39,13 @@ class AuthService {
 
   // 👤 Obtener usuario actual
   User? get currentUser => _auth.currentUser;
+
+  // ❌ Eliminar cuenta
+  Future<void> deleteAccount() async {
+    try {
+      await _auth.currentUser?.delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

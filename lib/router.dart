@@ -13,6 +13,7 @@ import 'UI/pages/training_page.dart';
 import 'UI/pages/exercises_categories.dart';
 import 'UI/pages/exercises_by_categories.dart';
 import 'UI/pages/grafics_page.dart';
+import 'UI/pages/settings_page.dart';
 
 late final GoRouter router;
 
@@ -79,6 +80,10 @@ GoRouter createRouter(AuthStateNotifier authState) {
           GoRoute(
             path: '/grafics',
             builder: (context, state) => const GraficsPage(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),

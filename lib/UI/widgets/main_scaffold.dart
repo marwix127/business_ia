@@ -87,22 +87,23 @@ class MainScaffold extends StatelessWidget {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Ajustes'),
-              selected: currentLocation == '/ajustes',
-              selectedColor: colorScheme.primary,
-              selectedTileColor: colorScheme.primary.withAlpha(31),
-              onTap: () {
-                context.push('/ajustes');
-              },
-            ),
+
             ListTile(
               leading: const Icon(Icons.exit_to_app),
               title: const Text('Cerrar sesión'),
               onTap: () {
                 AuthService().signOut();
                 context.go('/login');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Ajustes'),
+              selected: currentLocation == '/settings',
+              selectedColor: colorScheme.primary,
+              selectedTileColor: colorScheme.primary.withAlpha(31),
+              onTap: () {
+                context.push('/settings');
               },
             ),
           ],
