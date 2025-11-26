@@ -38,7 +38,10 @@ class ExercisesByCategories extends StatelessWidget {
               return ListTile(
                 leading: const Icon(Icons.fitness_center),
                 title: Text(ejercicio['nombre']),
-                subtitle: Text(ejercicio['descripcion'] ?? ''),
+                subtitle: Text(
+                  ejercicio['descripcion'] ?? '',
+                  style: const TextStyle(color: Colors.grey),
+                ),
                 onTap: () {
                   Navigator.pop(context, ejercicio); // ✅ ya contiene el id
                 },

@@ -97,6 +97,16 @@ class MainScaffold extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.accessibility_new),
+              title: const Text('Datos Corporales'),
+              selected: currentLocation == '/body-measurements',
+              selectedColor: colorScheme.primary,
+              selectedTileColor: colorScheme.primary.withAlpha(31),
+              onTap: () {
+                context.push('/body-measurements');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Ajustes'),
               selected: currentLocation == '/settings',
@@ -120,8 +130,8 @@ class MainScaffold extends StatelessWidget {
           enableFeedback: false,
           currentIndex: selectedIndex >= 0 ? selectedIndex : 0,
           onTap: (index) => context.go(tabs[index]['path'] as String),
-          selectedItemColor: colorScheme.primary,
-          unselectedItemColor: colorScheme.onSurface.withAlpha(153),
+          selectedItemColor: colorScheme.onSurface.withAlpha(153),
+          unselectedItemColor: colorScheme.primary,
           items: tabs
               .map(
                 (tab) => BottomNavigationBarItem(

@@ -57,7 +57,10 @@ class _ExerciseListPageState extends State<ExerciseListPage> {
               return ListTile(
                 leading: const Icon(Icons.fitness_center),
                 title: Text(ejercicio['nombre']),
-                subtitle: Text(ejercicio['descripcion'] ?? ''),
+                subtitle: Text(
+                  ejercicio['descripcion'] ?? '',
+                  style: const TextStyle(color: Colors.grey),
+                ),
                 trailing: IconButton(
                   icon: Icon(Icons.delete, color: colorScheme.error),
                   onPressed: () async {
