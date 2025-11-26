@@ -90,8 +90,9 @@ class _ExerciseListPageState extends State<ExerciseListPage> {
                     }
                   },
                 ),
-                onTap: () {
-                  Navigator.pop(context, ejercicio); // ✅ ya contiene el id
+                onTap: () async {
+                  await context.push('/add-exercise', extra: ejercicio);
+                  _refreshList();
                 },
               );
             },

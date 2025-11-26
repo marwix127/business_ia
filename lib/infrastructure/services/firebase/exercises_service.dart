@@ -71,4 +71,11 @@ class EjercicioService {
   Future<void> eliminarEjercicio(String id) async {
     await _db.collection('ejercicios2').doc(id).delete();
   }
+
+  Future<void> actualizarEjercicio(
+    String id,
+    Map<String, dynamic> ejercicio,
+  ) async {
+    await _db.collection('ejercicios2').doc(id).update(ejercicio);
+  }
 }

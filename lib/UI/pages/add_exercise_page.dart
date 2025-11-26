@@ -3,7 +3,9 @@ import 'package:business_ia/infrastructure/services/firebase/exercises_service.d
 import 'package:go_router/go_router.dart';
 
 class AddExercisePage extends StatefulWidget {
-  const AddExercisePage({super.key});
+  final Map<String, dynamic>? exercise;
+
+  const AddExercisePage({super.key, this.exercise});
 
   @override
   State<AddExercisePage> createState() => _AddExercisePageState();
@@ -19,6 +21,11 @@ class _AddExercisePageState extends State<AddExercisePage> {
   @override
   void initState() {
     super.initState();
+    if (widget.exercise != null) {
+      _nameController.text = widget.exercise!['nombre'] ?? '';
+      _descriptionController.text = widget.exercise!['descripcion'] ?? '';
+      _categoryController.text = widget.exercise!['categoria'] ?? '';
+    }
     _loadCategories();
   }
 
@@ -34,7 +41,9 @@ class _AddExercisePageState extends State<AddExercisePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Añadir ejercicio'),
+        title: Text(
+          widget.exercise != null ? 'Editar ejercicio' : 'Añadir ejercicio',
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -53,6 +62,7 @@ class _AddExercisePageState extends State<AddExercisePage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
@@ -95,30 +105,45 @@ class _AddExercisePageState extends State<AddExercisePage> {
                   ElevatedButton(
                     onPressed: () async {
                       final name = _nameController.text.trim();
-                      final description = _descriptionController.text.trim();
+                      var description = _descriptionController.text.trim();
                       final category =
                           _categoryController.text.trim().isNotEmpty
                           ? _categoryController.text.trim()
                           : _nameController.text.trim();
 
-                      if (name.isEmpty ||
-                          category.isEmpty ||
-                          description.isEmpty) {
+                      if (name.isEmpty || category.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Completa todos los campos'),
+                            content: Text('Completa los campos obligatorios'),
                           ),
                         );
                         return;
                       }
-                      await EjercicioService().agregarEjercicioPersonalizado({
-                        'nombre': name,
-                        'descripcion': description,
-                        'categoria': category,
-                      });
+                      if (description.isEmpty) {
+                        description = 'Sin descripción';
+                      }
+
+                      if (widget.exercise != null) {
+                        await EjercicioService()
+                            .actualizarEjercicio(widget.exercise!['id'], {
+                              'nombre': name,
+                              'descripcion': description,
+                              'categoria': category,
+                            });
+                      } else {
+                        await EjercicioService().agregarEjercicioPersonalizado({
+                          'nombre': name,
+                          'descripcion': description,
+                          'categoria': category,
+                        });
+                      }
                       context.pop();
                     },
-                    child: const Text('Guardar ejercicio'),
+                    child: Text(
+                      widget.exercise != null
+                          ? 'Actualizar ejercicio'
+                          : 'Guardar ejercicio',
+                    ),
                   ),
                 ],
               ),

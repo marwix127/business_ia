@@ -52,16 +52,17 @@ GoRouter createRouter(AuthStateNotifier authState) {
           return ExercisesByCategories(categoria: categoria);
         },
       ),
-
       GoRoute(
         path: '/add-exercise',
-        builder: (context, state) => const AddExercisePage(),
+        builder: (context, state) {
+          final exercise = state.extra as Map<String, dynamic>?;
+          return AddExercisePage(exercise: exercise);
+        },
       ),
       GoRoute(
         path: '/exercise-list',
         builder: (context, state) => const ExerciseListPage(),
       ),
-
       ShellRoute(
         builder: (context, state, child) {
           return MainScaffold(child: child);
@@ -84,6 +85,3 @@ GoRouter createRouter(AuthStateNotifier authState) {
     ],
   );
 }
-
-
-
