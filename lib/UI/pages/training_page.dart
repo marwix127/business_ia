@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:business_ia/infrastructure/services/firebase/training_service.dart';
 import 'package:business_ia/models/selected_exercise.dart';
 import 'package:business_ia/models/serie.dart';
 import 'package:business_ia/models/training.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'exercises_categories.dart';
 
 class TrainingPage extends StatefulWidget {
@@ -18,10 +21,10 @@ class TrainingPage extends StatefulWidget {
 class _TrainingPageState extends State<TrainingPage>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _pesoController = TextEditingController();
   List<SelectedExercise> exercises = [];
   final TrainingService _trainingService = TrainingService();
   final Map<String, List<Series>> _exerciseHints = {};
+  static const String _draftKey = 'training_draft';
 
   bool get _isEditing => widget.training != null;
 
@@ -32,12 +35,9 @@ class _TrainingPageState extends State<TrainingPage>
   bool get _hasUnsavedChanges {
     if (_isEditing) {
       return _nombreController.text != widget.training!.name ||
-          _pesoController.text != (widget.training!.weight?.toString() ?? '') ||
           _exercisesChanged();
     }
-    return _nombreController.text.isNotEmpty ||
-        _pesoController.text.isNotEmpty ||
-        exercises.isNotEmpty;
+    return _nombreController.text.isNotEmpty || exercises.isNotEmpty;
   }
 
   bool _exercisesChanged() {
@@ -78,15 +78,16 @@ class _TrainingPageState extends State<TrainingPage>
     WidgetsBinding.instance.addObserver(this);
     _initializeControllers();
     _initializeExercises();
+    // Cargar borrador solo si no estamos editando un entrenamiento existente
+    if (!_isEditing) {
+      _loadDraft();
+    }
   }
 
   void _initializeControllers() {
     // Ya están creados; solo establecer texto si estamos en edición
     if (_isEditing) {
       _nombreController.text = widget.training!.name;
-      _pesoController.text = widget.training!.weight != null
-          ? widget.training!.weight.toString()
-          : '';
     }
   }
 
@@ -141,15 +142,64 @@ class _TrainingPageState extends State<TrainingPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _nombreController.dispose();
-    _pesoController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // AutomaticKeepAliveClientMixin mantiene la página viva,
-    // así que ya no necesitamos guardar borradores manualmente
     super.updateKeepAlive();
+    // Guardar borrador cuando la app pasa a segundo plano
+    if (state == AppLifecycleState.paused &&
+        !_isEditing &&
+        _hasUnsavedChanges) {
+      _saveDraft();
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final draft = {
+        'name': _nombreController.text,
+        'exercises': exercises.map((e) => e.toMap()).toList(),
+      };
+      await prefs.setString(_draftKey, jsonEncode(draft));
+    } catch (_) {
+      // Ignorar errores de guardado
+    }
+  }
+
+  Future<void> _loadDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_draftKey);
+      if (raw == null) return;
+
+      final draft = jsonDecode(raw) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      setState(() {
+        _nombreController.text = draft['name'] ?? '';
+        exercises = (draft['exercises'] as List<dynamic>)
+            .map((e) => SelectedExercise.fromMap(e as Map<String, dynamic>))
+            .toList();
+      });
+      // Cargar hints para ejercicios restaurados
+      for (var exercise in exercises) {
+        _loadHints(exercise.id);
+      }
+    } catch (_) {
+      // Ignorar errores de carga
+    }
+  }
+
+  Future<void> _clearDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_draftKey);
+    } catch (_) {
+      // Ignorar errores
+    }
   }
 
   Future<bool> _confirmExit() async {
@@ -269,7 +319,6 @@ class _TrainingPageState extends State<TrainingPage>
 
   Future<void> _saveTraining() async {
     final name = _nombreController.text.trim();
-    final weight = _parseDecimal(_pesoController.text.trim());
 
     if (name.isEmpty || exercises.isEmpty) {
       _showSnackBar('Añade un nombre y al menos un ejercicio.');
@@ -279,13 +328,14 @@ class _TrainingPageState extends State<TrainingPage>
     final training = Training(
       id: _isEditing ? widget.training!.id : '',
       name: name,
-      weight: weight,
+      weight: null,
       date: _isEditing ? widget.training!.date : DateTime.now(),
       exercises: exercises,
     );
 
     try {
       await _trainingService.saveTraining(training);
+      await _clearDraft(); // Limpiar borrador después de guardar
       _showSnackBar('Entrenamiento guardado con éxito');
       if (mounted) context.pop(true);
     } catch (e) {
@@ -335,30 +385,12 @@ class _TrainingPageState extends State<TrainingPage>
   }
 
   Widget _buildHeaderInputs() {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _nombreController,
-            decoration: const InputDecoration(
-              labelText: 'Nombre del entrenamiento',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 120,
-          child: TextField(
-            controller: _pesoController,
-            decoration: const InputDecoration(
-              labelText: 'Peso (kg)',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.number,
-          ),
-        ),
-      ],
+    return TextField(
+      controller: _nombreController,
+      decoration: const InputDecoration(
+        labelText: 'Nombre del entrenamiento',
+        border: OutlineInputBorder(),
+      ),
     );
   }
 
