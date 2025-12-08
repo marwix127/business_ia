@@ -33,4 +33,27 @@ class CorporalService {
         .orderBy('date', descending: true)
         .snapshots();
   }
+
+  // 🔍 Obtener última medición
+  Future<Map<String, dynamic>?> getLastMeasurement() async {
+    final user = _authService.currentUser;
+    if (user == null) return null;
+
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('body_measurements')
+          .orderBy('date', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.data();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

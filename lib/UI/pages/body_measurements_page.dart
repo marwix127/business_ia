@@ -1,4 +1,6 @@
+import 'package:business_ia/UI/widgets/body_composition_chart.dart';
 import 'package:business_ia/infrastructure/services/firebase/corporal_service.dart';
+import 'package:business_ia/models/measurement.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +20,23 @@ class _BodyMeasurementsPageState extends State<BodyMeasurementsPage> {
   final _muscleController = TextEditingController();
   final CorporalService _corporalService = CorporalService();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastHeight();
+  }
+
+  Future<void> _loadLastHeight() async {
+    final lastMeasurement = await _corporalService.getLastMeasurement();
+    if (lastMeasurement != null && lastMeasurement['height'] != null) {
+      if (mounted) {
+        setState(() {
+          _heightController.text = lastMeasurement['height'].toString();
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -205,60 +224,77 @@ class _BodyMeasurementsPageState extends State<BodyMeasurementsPage> {
                       );
                     }
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: docs.length,
-                      itemBuilder: (context, index) {
-                        final data = docs[index].data() as Map<String, dynamic>;
-                        final date =
-                            (data['date'] as Timestamp?)?.toDate() ??
-                            DateTime.now();
-                        final formattedDate = DateFormat(
-                          'dd/MM/yyyy HH:mm',
-                        ).format(date);
+                    final measurements = docs.map((doc) {
+                      return Measurement.fromMap(
+                        doc.data() as Map<String, dynamic>,
+                      );
+                    }).toList();
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  formattedDate,
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(color: colorScheme.primary),
-                                ),
-                                const Divider(),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+                    return Column(
+                      children: [
+                        BodyCompositionChart(measurements: measurements),
+                        const SizedBox(height: 16),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final data =
+                                docs[index].data() as Map<String, dynamic>;
+                            final date =
+                                (data['date'] as Timestamp?)?.toDate() ??
+                                DateTime.now();
+                            final formattedDate = DateFormat(
+                              'dd/MM/yyyy HH:mm',
+                            ).format(date);
+
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _MeasurementItem(
-                                      label: 'Peso',
-                                      value: '${data['weight'] ?? '-'} kg',
-                                      icon: Icons.monitor_weight,
+                                    Text(
+                                      formattedDate,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: colorScheme.primary,
+                                          ),
                                     ),
-                                    if (data['fat_percentage'] != null)
-                                      _MeasurementItem(
-                                        label: 'Grasa',
-                                        value: '${data['fat_percentage']}%',
-                                        icon: Icons.opacity,
-                                      ),
-                                    if (data['muscle_mass'] != null)
-                                      _MeasurementItem(
-                                        label: 'Músculo',
-                                        value: '${data['muscle_mass']} kg',
-                                        icon: Icons.fitness_center,
-                                      ),
+                                    const Divider(),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        _MeasurementItem(
+                                          label: 'Peso',
+                                          value: '${data['weight'] ?? '-'} kg',
+                                          icon: Icons.monitor_weight,
+                                        ),
+                                        if (data['fat_percentage'] != null)
+                                          _MeasurementItem(
+                                            label: 'Grasa',
+                                            value: '${data['fat_percentage']}%',
+                                            icon: Icons.opacity,
+                                          ),
+                                        if (data['muscle_mass'] != null)
+                                          _MeasurementItem(
+                                            label: 'Músculo',
+                                            value: '${data['muscle_mass']} kg',
+                                            icon: Icons.fitness_center,
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     );
                   },
                 ),
