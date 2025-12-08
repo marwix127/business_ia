@@ -4,6 +4,7 @@ import 'package:business_ia/infrastructure/services/firebase/training_service.da
 import 'package:business_ia/models/selected_exercise.dart';
 import 'package:business_ia/models/serie.dart';
 import 'package:business_ia/models/training.dart';
+import 'package:business_ia/UI/widgets/exercise_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -397,7 +398,7 @@ class _TrainingPageState extends State<TrainingPage>
   Widget _buildExercisesList() {
     return ListView.builder(
       itemCount: exercises.length,
-      itemBuilder: (context, i) => _ExerciseCard(
+      itemBuilder: (context, i) => ExerciseCard(
         exercise: exercises[i],
         hints: _exerciseHints[exercises[i].id],
         isEditing: _isEditing,
@@ -436,179 +437,6 @@ class _TrainingPageState extends State<TrainingPage>
           ),
         ),
       ],
-    );
-  }
-}
-
-// Widget extraído para ejercicios
-class _ExerciseCard extends StatelessWidget {
-  final SelectedExercise exercise;
-  final List<Series>? hints;
-  final bool isEditing;
-  final VoidCallback onDelete;
-  final VoidCallback onAddSeries;
-  final Function(int seriesIndex, String field, String value) onUpdateSeries;
-  final Function(int seriesIndex) onRemoveSeries;
-
-  const _ExerciseCard({
-    required this.exercise,
-    this.hints,
-    required this.isEditing,
-    required this.onDelete,
-    required this.onAddSeries,
-    required this.onUpdateSeries,
-    required this.onRemoveSeries,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    exercise.name,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Headers for columns
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Peso (kg)',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      'Reps',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(width: 48), // Space for delete button
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: exercise.series.length,
-              itemBuilder: (context, j) {
-                final hint = (hints != null && j < hints!.length)
-                    ? hints![j]
-                    : null;
-                return _SeriesRow(
-                  series: exercise.series[j],
-                  hintWeight: hint?.weight,
-                  hintReps: hint?.repetitions,
-                  isEditing: isEditing,
-                  onWeightChanged: (value) =>
-                      onUpdateSeries(j, 'weight', value),
-                  onRepsChanged: (value) => onUpdateSeries(j, 'reps', value),
-                  onRemove: () => onRemoveSeries(j),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: onAddSeries,
-              icon: const Icon(Icons.add),
-              label: const Text('Añadir serie'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Widget extraído para filas de series
-class _SeriesRow extends StatelessWidget {
-  final Series series;
-  final double? hintWeight;
-  final int? hintReps;
-  final bool isEditing;
-  final Function(String) onWeightChanged;
-  final Function(String) onRepsChanged;
-  final VoidCallback onRemove;
-
-  const _SeriesRow({
-    required this.series,
-    this.hintWeight,
-    this.hintReps,
-    required this.isEditing,
-    required this.onWeightChanged,
-    required this.onRepsChanged,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: series.weight != 0
-                  ? series.weight.toString()
-                  : null,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: hintWeight != null ? '$hintWeight' : 'Peso (kg)',
-                hintText: hintWeight != null ? '$hintWeight' : '0',
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-              ),
-              onChanged: onWeightChanged,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: TextFormField(
-              initialValue: series.repetitions != 0
-                  ? series.repetitions.toString()
-                  : null,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: hintReps != null ? '$hintReps' : 'Reps',
-                hintText: hintReps != null ? '$hintReps' : '0',
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-              ),
-              onChanged: onRepsChanged,
-            ),
-          ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.remove_circle, color: Colors.red),
-          ),
-        ],
-      ),
     );
   }
 }
