@@ -78,4 +78,35 @@ class EjercicioService {
   ) async {
     await _db.collection('ejercicios2').doc(id).update(ejercicio);
   }
+
+  /// Renombra una categoría actualizando todos los ejercicios que la contienen
+  Future<void> renombrarCategoria(
+    String categoriaAntigua,
+    String categoriaNueva,
+  ) async {
+    final snapshot = await _db
+        .collection('ejercicios2')
+        .where('categoria', isEqualTo: categoriaAntigua)
+        .get();
+
+    final batch = _db.batch();
+    for (final doc in snapshot.docs) {
+      batch.update(doc.reference, {'categoria': categoriaNueva});
+    }
+    await batch.commit();
+  }
+
+  /// Elimina todos los ejercicios de una categoría
+  Future<void> eliminarCategoria(String categoria) async {
+    final snapshot = await _db
+        .collection('ejercicios2')
+        .where('categoria', isEqualTo: categoria)
+        .get();
+
+    final batch = _db.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
 }

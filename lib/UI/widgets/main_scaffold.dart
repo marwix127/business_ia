@@ -58,14 +58,14 @@ class MainScaffold extends StatelessWidget {
                 ],
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.list),
-              title: const Text('Ejercicios'),
-              selected: currentLocation == '/exercise-list',
+              title: const Text('Gestionar Ejercicios'),
               selectedColor: colorScheme.primary,
               selectedTileColor: colorScheme.primary.withAlpha(31),
               onTap: () {
-                context.push('/exercise-list');
+                context.push('/exercise-management');
               },
             ),
             // Switch de tema
