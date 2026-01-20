@@ -56,4 +56,38 @@ class CorporalService {
       return null;
     }
   }
+
+  // ✏️ Actualizar medición
+  Future<void> updateMeasurement(String id, Map<String, dynamic> data) async {
+    final user = _authService.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado');
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('body_measurements')
+          .doc(id)
+          .update(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // 🗑️ Borrar medición
+  Future<void> deleteMeasurement(String id) async {
+    final user = _authService.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado');
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('body_measurements')
+          .doc(id)
+          .delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -85,6 +85,117 @@ class _BodyMeasurementsPageState extends State<BodyMeasurementsPage> {
     }
   }
 
+  Future<void> _deleteMeasurement(String id) async {
+    try {
+      await _corporalService.deleteMeasurement(id);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Medición eliminada')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
+      }
+    }
+  }
+
+  Future<void> _showEditDialog(String id, Map<String, dynamic> data) async {
+    final weightEditController = TextEditingController(
+      text: data['weight']?.toString(),
+    );
+    final heightEditController = TextEditingController(
+      text: data['height']?.toString(),
+    );
+    final fatEditController = TextEditingController(
+      text: data['fat_percentage']?.toString(),
+    );
+    final muscleEditController = TextEditingController(
+      text: data['muscle_mass']?.toString(),
+    );
+    final editFormKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar Medición'),
+        content: Form(
+          key: editFormKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: weightEditController,
+                  decoration: const InputDecoration(labelText: 'Peso (kg)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Requerido' : null,
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: heightEditController,
+                  decoration: const InputDecoration(labelText: 'Altura (cm)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: fatEditController,
+                  decoration: const InputDecoration(labelText: '% Grasa'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: muscleEditController,
+                  decoration: const InputDecoration(labelText: 'Músculo (kg)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!editFormKey.currentState!.validate()) return;
+
+              try {
+                await _corporalService.updateMeasurement(id, {
+                  'weight': parseMeasurement(weightEditController.text),
+                  'height': parseMeasurement(heightEditController.text),
+                  'fat_percentage': parseMeasurement(fatEditController.text),
+                  'muscle_mass': parseMeasurement(muscleEditController.text),
+                });
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al actualizar: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -255,14 +366,89 @@ class _BodyMeasurementsPageState extends State<BodyMeasurementsPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      formattedDate,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            color: colorScheme.primary,
-                                          ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          formattedDate,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                color: colorScheme.primary,
+                                              ),
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                size: 20,
+                                              ),
+                                              onPressed: () => _showEditDialog(
+                                                docs[index].id,
+                                                data,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                size: 20,
+                                              ),
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    title: const Text(
+                                                      'Borrar Medición',
+                                                    ),
+                                                    content: const Text(
+                                                      '¿Estás seguro de que deseas borrar este registro?',
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                            ),
+                                                        child: const Text(
+                                                          'Cancelar',
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          _deleteMeasurement(
+                                                            docs[index].id,
+                                                          );
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                        child: const Text(
+                                                          'Borrar',
+                                                          style: TextStyle(
+                                                            color: Colors.red,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              color: colorScheme.error,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                     const Divider(),
                                     Row(
