@@ -2,6 +2,7 @@ import 'package:business_ia/models/training.dart';
 import 'package:business_ia/infrastructure/services/firebase/training_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TrainingHistoryPage extends StatefulWidget {
   const TrainingHistoryPage({super.key});
@@ -13,15 +14,37 @@ class TrainingHistoryPage extends StatefulWidget {
 class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
   late Future<List<Training>> _trainingsFuture;
   final TrainingService _trainingService = TrainingService();
+  bool _hasDraft = false;
 
   @override
   void initState() {
     super.initState();
     _trainingsFuture = _trainingService.getTrainings();
+    _checkDraft();
+  }
+
+  Future<void> _checkDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _hasDraft = prefs.containsKey('training_draft');
+      });
+    }
   }
 
   void _navigateToNewTraining() async {
     final result = await context.push('/training');
+    _checkDraft(); // Re-comprobar después de volver
+    if (result != null) {
+      setState(() {
+        _trainingsFuture = _trainingService.getTrainings();
+      });
+    }
+  }
+
+  void _navigateToDraft() async {
+    final result = await context.push('/training?loadDraft=true');
+    _checkDraft(); // Re-comprobar después de volver
     if (result != null) {
       setState(() {
         _trainingsFuture = _trainingService.getTrainings();
@@ -34,12 +57,29 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToNewTraining,
-        tooltip: "Nuevo entrenamiento",
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_hasDraft) ...[
+            FloatingActionButton(
+              heroTag: 'draft_fab',
+              onPressed: _navigateToDraft,
+              tooltip: "Continuar borrador",
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              child: const Icon(Icons.edit_note),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FloatingActionButton(
+            heroTag: 'new_training_fab',
+            onPressed: _navigateToNewTraining,
+            tooltip: "Nuevo entrenamiento",
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: FutureBuilder<List<Training>>(
         future: _trainingsFuture,
@@ -87,4 +127,3 @@ class _TrainingHistoryPageState extends State<TrainingHistoryPage> {
     );
   }
 }
-

@@ -12,8 +12,9 @@ import 'exercises_categories.dart';
 
 class TrainingPage extends StatefulWidget {
   final Training? training;
+  final bool loadDraft;
 
-  const TrainingPage({super.key, this.training});
+  const TrainingPage({super.key, this.training, this.loadDraft = false});
 
   @override
   State<TrainingPage> createState() => _TrainingPageState();
@@ -79,8 +80,8 @@ class _TrainingPageState extends State<TrainingPage>
     WidgetsBinding.instance.addObserver(this);
     _initializeControllers();
     _initializeExercises();
-    // Cargar borrador solo si no estamos editando un entrenamiento existente
-    if (!_isEditing) {
+    // Cargar borrador solo si se solicita explícitamente y no estamos editando
+    if (!_isEditing && widget.loadDraft) {
       _loadDraft();
     }
   }

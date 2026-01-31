@@ -40,7 +40,8 @@ GoRouter createRouter(AuthStateNotifier authState) {
         path: '/training',
         builder: (context, state) {
           final training = state.extra as Training?;
-          return TrainingPage(training: training);
+          final loadDraft = state.uri.queryParameters['loadDraft'] == 'true';
+          return TrainingPage(training: training, loadDraft: loadDraft);
         },
       ),
       GoRoute(
