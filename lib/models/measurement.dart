@@ -15,7 +15,7 @@ class Measurement {
 
   factory Measurement.fromMap(Map<String, dynamic> data) {
     return Measurement(
-      date: (data['date'] as Timestamp).toDate(),
+      date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       weight: (data['currentWeight'] ?? data['weight'] ?? 0).toDouble(),
       fat: (data['currentBodyFat'] ?? data['fat_percentage'] ?? 0).toDouble(),
       muscle: (data['currentMuscle'] ?? data['muscle_mass'] ?? 0).toDouble(),
