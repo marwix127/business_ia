@@ -36,9 +36,26 @@ class ExerciseCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    exercise.name,
-                    style: const TextStyle(fontSize: 18),
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        exercise.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        exercise.category,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(

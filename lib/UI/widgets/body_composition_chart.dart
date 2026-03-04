@@ -3,14 +3,21 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class BodyCompositionChart extends StatelessWidget {
+class BodyCompositionChart extends StatefulWidget {
   final List<Measurement> measurements;
 
   const BodyCompositionChart({super.key, required this.measurements});
 
   @override
+  State<BodyCompositionChart> createState() => _BodyCompositionChartState();
+}
+
+class _BodyCompositionChartState extends State<BodyCompositionChart> {
+  String _selectedMetric = 'Peso';
+
+  @override
   Widget build(BuildContext context) {
-    if (measurements.isEmpty) {
+    if (widget.measurements.isEmpty) {
       return const SizedBox(
         height: 200,
         child: Center(child: Text("No hay datos suficientes para la gráfica")),
@@ -18,50 +25,97 @@ class BodyCompositionChart extends StatelessWidget {
     }
 
     // Sort measurements by date
-    final sortedMeasurements = List<Measurement>.from(measurements)
+    final sortedMeasurements = List<Measurement>.from(widget.measurements)
       ..sort((a, b) => a.date.compareTo(b.date));
 
     // Prepare spots
-    final weightSpots = <FlSpot>[];
-    final fatSpots = <FlSpot>[];
-    final muscleSpots = <FlSpot>[];
-
-    for (int i = 0; i < sortedMeasurements.length; i++) {
-      final m = sortedMeasurements[i];
-      weightSpots.add(FlSpot(i.toDouble(), m.weight));
-      fatSpots.add(FlSpot(i.toDouble(), m.fat));
-      muscleSpots.add(FlSpot(i.toDouble(), m.muscle));
-    }
-
-    // Calculate min and max Y for better scaling
+    final spots = <FlSpot>[];
     double minY = double.infinity;
     double maxY = double.negativeInfinity;
 
-    for (var m in sortedMeasurements) {
-      if (m.weight < minY) minY = m.weight;
-      if (m.fat < minY) minY = m.fat;
-      if (m.muscle < minY) minY = m.muscle;
+    for (int i = 0; i < sortedMeasurements.length; i++) {
+      final m = sortedMeasurements[i];
+      double value = 0.0;
+      switch (_selectedMetric) {
+        case 'Peso':
+          value = m.weight;
+          break;
+        case 'Grasa':
+          value = m.fat;
+          break;
+        case 'Músculo':
+          value = m.muscle;
+          break;
+      }
 
-      if (m.weight > maxY) maxY = m.weight;
-      if (m.fat > maxY) maxY = m.fat;
-      if (m.muscle > maxY) maxY = m.muscle;
+      spots.add(FlSpot(i.toDouble(), value));
+
+      if (value < minY) minY = value;
+      if (value > maxY) maxY = value;
     }
 
     // Add some padding to Y axis
-    minY = (minY - 5).clamp(0, double.infinity);
-    maxY += 5;
+    if (minY == maxY) {
+      minY = (minY - 5).clamp(0.0, double.infinity);
+      maxY += 5;
+    } else {
+      double diff = maxY - minY;
+      minY = (minY - (diff * 1.5)).clamp(0.0, double.infinity);
+      maxY = maxY + (diff * 1.5);
+    }
+
+    // Fallback if still invalid
+    if (minY == double.infinity) {
+      minY = 0;
+      maxY = 10;
+    }
+
+    Color lineColor;
+    switch (_selectedMetric) {
+      case 'Peso':
+        lineColor = Colors.blue;
+        break;
+      case 'Grasa':
+        lineColor = Colors.red;
+        break;
+      case 'Músculo':
+        lineColor = Colors.green;
+        break;
+      default:
+        lineColor = Colors.blue;
+    }
 
     return Column(
       children: [
-        // Legend
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // Selector
+        Wrap(
+          spacing: 8.0,
+          alignment: WrapAlignment.center,
           children: [
-            _LegendItem(color: Colors.blue, text: "Peso (kg)"),
-            const SizedBox(width: 16),
-            _LegendItem(color: Colors.red, text: "Grasa (%)"),
-            const SizedBox(width: 16),
-            _LegendItem(color: Colors.green, text: "Músculo (kg)"),
+            ChoiceChip(
+              label: const Text('Peso (kg)'),
+              selected: _selectedMetric == 'Peso',
+              selectedColor: Colors.blue.withOpacity(0.2),
+              onSelected: (selected) {
+                if (selected) setState(() => _selectedMetric = 'Peso');
+              },
+            ),
+            ChoiceChip(
+              label: const Text('Grasa (%)'),
+              selected: _selectedMetric == 'Grasa',
+              selectedColor: Colors.red.withOpacity(0.2),
+              onSelected: (selected) {
+                if (selected) setState(() => _selectedMetric = 'Grasa');
+              },
+            ),
+            ChoiceChip(
+              label: const Text('Músculo (kg)'),
+              selected: _selectedMetric == 'Músculo',
+              selectedColor: Colors.green.withOpacity(0.2),
+              onSelected: (selected) {
+                if (selected) setState(() => _selectedMetric = 'Músculo');
+              },
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -95,14 +149,14 @@ class BodyCompositionChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
-                      interval: 1,
+                      interval: (sortedMeasurements.length / 4)
+                          .ceilToDouble()
+                          .clamp(1.0, double.infinity),
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
-                        if (index >= 0 && index < sortedMeasurements.length) {
-                          // Show date for every few items to avoid clutter if many items
-                          // For now, show all or let fl_chart handle overlap if possible,
-                          // but simple logic: show first, last, and some in between?
-                          // Let's just show Day/Month
+                        if (index >= 0 &&
+                            index < sortedMeasurements.length &&
+                            value == index.toDouble()) {
                           final date = sortedMeasurements[index].date;
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -115,7 +169,7 @@ class BodyCompositionChart extends StatelessWidget {
                             ),
                           );
                         }
-                        return const Text('');
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
@@ -125,7 +179,7 @@ class BodyCompositionChart extends StatelessWidget {
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) {
                         return Text(
-                          value.toInt().toString(),
+                          value.toStringAsFixed(1),
                           style: const TextStyle(
                             fontSize: 10,
                             color: Colors.grey,
@@ -137,47 +191,25 @@ class BodyCompositionChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
-                  // Weight Line
                   LineChartBarData(
-                    spots: weightSpots,
+                    spots: spots,
                     isCurved: true,
-                    color: Colors.blue,
+                    color: lineColor,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  // Fat Line
-                  LineChartBarData(
-                    spots: fatSpots,
-                    isCurved: true,
-                    color: Colors.red,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  // Muscle Line
-                  LineChartBarData(
-                    spots: muscleSpots,
-                    isCurved: true,
-                    color: Colors.green,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: true),
-                    belowBarData: BarAreaData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: lineColor.withOpacity(0.1),
+                    ),
                   ),
                 ],
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
-                        String label = '';
-                        if (spot.barIndex == 0) label = 'Peso';
-                        if (spot.barIndex == 1) label = 'Grasa';
-                        if (spot.barIndex == 2) label = 'Músculo';
                         return LineTooltipItem(
-                          '$label: ${spot.y}',
+                          '$_selectedMetric: ${spot.y.toStringAsFixed(1)}',
                           const TextStyle(color: Colors.white),
                         );
                       }).toList();
@@ -188,28 +220,6 @@ class BodyCompositionChart extends StatelessWidget {
             ),
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String text;
-
-  const _LegendItem({required this.color, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-        ),
-        const SizedBox(width: 4),
-        Text(text, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
