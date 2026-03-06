@@ -33,10 +33,8 @@ El objetivo es ofrecer una experiencia personalizada para cada usuario, permiti�
 | **Backend** | Firebase (Auth, Firestore) |
 | **Estado** | ChangeNotifier / Provider |
 | **Rutas** | GoRouter |
-| **IA (opcional)** | OpenAI / Hugging Face API |
-| **Gráficos** | fl_chart o charts_flutter (según preferencia) |
+| **Gráficos** | fl_chart 
 
----
 
-## 🧩 Estructura del proyecto
+
 
