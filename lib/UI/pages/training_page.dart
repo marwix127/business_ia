@@ -28,6 +28,9 @@ class _TrainingPageState extends State<TrainingPage>
   final Map<String, List<Series>> _exerciseHints = {};
   static const String _draftKey = 'training_draft';
 
+  // true solo cuando el usuario modifica algo desde la última carga/guardado
+  bool _isDirty = false;
+
   bool get _isEditing => widget.training != null;
 
   // Mantener la página viva mientras haya cambios sin guardar
@@ -39,7 +42,8 @@ class _TrainingPageState extends State<TrainingPage>
       return _nombreController.text != widget.training!.name ||
           _exercisesChanged();
     }
-    return _nombreController.text.isNotEmpty || exercises.isNotEmpty;
+    // En modo nuevo/draft: solo hay cambios si el usuario los hizo manualmente
+    return _isDirty;
   }
 
   bool _exercisesChanged() {
@@ -166,6 +170,7 @@ class _TrainingPageState extends State<TrainingPage>
         'exercises': exercises.map((e) => e.toMap()).toList(),
       };
       await prefs.setString(_draftKey, jsonEncode(draft));
+      _isDirty = false; // tras guardar el draft ya no hay cambios pendientes
     } catch (_) {
       // Ignorar errores de guardado
     }
@@ -185,6 +190,7 @@ class _TrainingPageState extends State<TrainingPage>
         exercises = (draft['exercises'] as List<dynamic>)
             .map((e) => SelectedExercise.fromMap(e as Map<String, dynamic>))
             .toList();
+        _isDirty = false; // cargar draft no cuenta como cambio del usuario
       });
       // Cargar hints para ejercicios restaurados
       for (var exercise in exercises) {
@@ -207,26 +213,62 @@ class _TrainingPageState extends State<TrainingPage>
   Future<bool> _confirmExit() async {
     if (!_hasUnsavedChanges) return true;
 
-    final result = await showDialog<bool>(
+    // En modo edición no hay draft, mostramos Cancelar / Salir clásico
+    if (_isEditing) {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('¿Salir sin guardar?'),
+          content: const Text(
+            'Hay cambios sin guardar. ¿Estás seguro de que quieres salir?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Salir'),
+            ),
+          ],
+        ),
+      );
+      return result ?? false;
+    }
+
+    // En modo nuevo entrenamiento: Guardar como draft / Salir
+    final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Salir sin guardar?'),
         content: const Text(
-          'Hay cambios sin guardar. ¿Estás seguro de que quieres salir?',
+          'Hay cambios sin guardar. ¿Qué quieres hacer?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            onPressed: () => Navigator.of(context).pop('draft'),
+            child: const Text('Guardar como draft'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(context).pop('exit'),
             child: const Text('Salir'),
           ),
         ],
       ),
     );
-    return result ?? false;
+
+    if (result == 'draft') {
+      await _saveDraft();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Borrador guardado')),
+        );
+      }
+      return true; // Salir tras guardar el draft
+    }
+
+    return result == 'exit';
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -250,6 +292,7 @@ class _TrainingPageState extends State<TrainingPage>
           category: ejercicio['categoria'],
         ),
       );
+      _isDirty = true;
     });
     _loadHints(ejercicio['id']);
   }
@@ -278,6 +321,7 @@ class _TrainingPageState extends State<TrainingPage>
       } else {
         serie.repetitions = int.tryParse(value) ?? 0;
       }
+      _isDirty = true;
     });
   }
 
@@ -348,7 +392,16 @@ class _TrainingPageState extends State<TrainingPage>
   @override
   Widget build(BuildContext context) {
     super.build(context); // ← Necesario para AutomaticKeepAliveClientMixin
-    return Scaffold(
+    return PopScope(
+      // Bloqueamos el pop automático para manejarlo nosotros
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return; // Ya se ejecutó el pop, no hacer nada
+        if (await _confirmExit() && mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -383,7 +436,8 @@ class _TrainingPageState extends State<TrainingPage>
           ],
         ),
       ),
-    );
+      ), // cierre Scaffold
+    ); // cierre PopScope
   }
 
   Widget _buildHeaderInputs() {
@@ -393,6 +447,9 @@ class _TrainingPageState extends State<TrainingPage>
         labelText: 'Nombre del entrenamiento',
         border: OutlineInputBorder(),
       ),
+      onChanged: (_) {
+        if (!_isDirty) setState(() => _isDirty = true);
+      },
     );
   }
 
@@ -403,14 +460,19 @@ class _TrainingPageState extends State<TrainingPage>
         exercise: exercises[i],
         hints: _exerciseHints[exercises[i].id],
         isEditing: _isEditing,
-        onDelete: () => setState(() => exercises.removeAt(i)),
+        onDelete: () => setState(() {
+          exercises.removeAt(i);
+          _isDirty = true;
+        }),
         onUpdateSeries: (seriesIndex, field, value) =>
             _updateSeries(i, seriesIndex, field, value),
         onAddSeries: () => setState(() {
           exercises[i].series.add(Series(repetitions: 0, weight: 0));
+          _isDirty = true;
         }),
         onRemoveSeries: (seriesIndex) => setState(() {
           exercises[i].series.removeAt(seriesIndex);
+          _isDirty = true;
         }),
       ),
     );
