@@ -33,7 +33,7 @@ Eres un entrenador personal virtual experto.
 Aquí tienes el historial detallado de los últimos entrenamientos del usuario:
 $historyContext
 
-Usa esta información para dar respuestas personalizadas y precisas sobre su progreso, pesos, y frecuencia.
+Usa esta información para dar respuestas personalizadas y precisas sobre su progreso, pesos, y frecuencia. Intenta ser breve y conciso en tus respuestas. 
 '''),
           ]),
           Content('model', [
