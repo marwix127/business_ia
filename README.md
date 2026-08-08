@@ -15,9 +15,9 @@ móviles.
 
 ## Capturas
 
-| Inicio | Entrenamiento | Chat IA | Progreso |
-|---|---|---|---|
-| ![Home](docs/screenshots/ScreenshotHome.jpg) | ![Training](docs/screenshots/ScreenshotTraining.jpg) | ![AI Chat](docs/screenshots/ScreenshotIA.jpg) | ![Progress](docs/screenshots/ScreenshotProgress.jpg) |
+| Inicio | Entrenamiento | Chat IA | Progreso | Físico |
+|---|---|---|---|---|
+| ![Home](docs/screenshots/ScreenshotHome.jpg) | ![Training](docs/screenshots/ScreenshotTraining.jpg) | ![AI Chat](docs/screenshots/ScreenshotIA.jpg) | ![ Training Progress](docs/screenshots/ScreenshotProgress.jpg) |  ![Body](docs/screenshots/ScreenshotBody.jpg) |
 
 ## Funcionalidades
 
@@ -64,25 +64,53 @@ App Check y el modo de usuarios autenticados.
 
 ## Puesta en marcha
 
-Requisitos: Flutter 3.44 o posterior y un proyecto Firebase con Authentication y
-Firestore habilitados.
+La plataforma principal es Android. Para ejecutarla se necesita Flutter 3.44
+(la versión usada en CI), el Android SDK y un dispositivo o emulador disponible.
 
 ```bash
 git clone https://github.com/marwix127/Stronger.git
 cd Stronger
 flutter pub get
-flutter run
+flutter devices
+flutter run -d DEVICE_ID
 ```
 
-No se necesita `variables.env`, una API key de Gemini ni Firebase Cloud
-Functions. Los archivos de configuración generados por FlutterFire contienen
-identificadores públicos de Firebase, no secretos de Gemini.
+El repositorio incluye la configuración nativa Android/iOS del proyecto usado
+para la demo. Para conectar un fork a otro backend hay que crear un proyecto
+Firebase, habilitar el acceso por email en Authentication y Cloud Firestore y
+regenerar la configuración:
 
-Para web hay que proporcionar la clave pública del proveedor de App Check:
+```bash
+npm install --global firebase-tools@15.17.0
+firebase login
+dart pub global activate flutterfire_cli
+flutterfire configure
+firebase deploy --project PROJECT_ID --only firestore:rules
+```
+
+Después se activa Firebase AI Logic y App Check siguiendo la
+[guía de configuración de IA](docs/ai.md). No se necesita `variables.env`, una
+API key de Gemini ni Firebase Cloud Functions. Los identificadores y API keys
+de cliente generados por FlutterFire identifican el proyecto Firebase, pero no
+son credenciales secretas de Gemini.
+
+### Plataformas
+
+| Plataforma | Estado |
+|---|---|
+| Android | Plataforma principal; compilación y E2E automatizados en CI |
+| iOS | Configuración nativa incluida, sin validación automática en CI |
+| Web, Windows y macOS | Requieren ejecutar `flutterfire configure` antes de usarse |
+| Linux | Firebase no está configurado |
+
+Web necesita además la clave pública del proveedor de App Check:
 
 ```bash
 flutter run -d chrome --dart-define=RECAPTCHA_SITE_KEY=public_site_key
 ```
+
+El repositorio no publica binarios y la firma Android de producción debe
+configurarse antes de distribuir una versión release.
 
 ## Calidad
 
@@ -90,7 +118,7 @@ flutter run -d chrome --dart-define=RECAPTCHA_SITE_KEY=public_site_key
 flutter analyze
 flutter test
 flutter test --coverage
-flutter build web --release --dart-define=RECAPTCHA_SITE_KEY=public_site_key
+flutter build apk --debug
 ```
 
 La suite cubre modelos, servicios de Firestore, formateo seguro del contexto,
@@ -104,18 +132,19 @@ para ver su alcance, garantías de seguridad y ejecución local.
 Las reglas de Firestore se validan contra el emulador real:
 
 ```bash
-npm install --prefix firebase-tests
-firebase emulators:exec --only firestore "npm test --prefix firebase-tests"
+npm ci --prefix firebase-tests
+npx --yes firebase-tools@15.17.0 emulators:exec --only firestore \
+  --project stronger-rules-test "npm test --prefix firebase-tests"
 ```
 
 Actualmente la suite Flutter contiene 162 tests unitarios, de widgets y de
-flujo, con un 84,9 % de cobertura instrumentada. Las reglas añaden pruebas
-específicas de acceso anónimo, aislamiento entre usuarios y propiedad de los
-ejercicios personalizados.
+flujo, con un 84,9 % de cobertura instrumentada. Se añade un escenario E2E
+Android y 9 pruebas de reglas para acceso anónimo, aislamiento entre usuarios y
+propiedad de los ejercicios personalizados.
 
 GitHub Actions ejecuta en cada `push` y `pull request` el análisis estático, la
-suite Flutter, un umbral mínimo del 80 % de cobertura, la compilación Android,
-las pruebas de reglas y el E2E sobre un emulador Android limpio.
+suite Flutter, un umbral mínimo del 80 % de cobertura, una compilación APK
+debug, las pruebas de reglas y el E2E sobre un emulador Android limpio.
 
 ## Estructura principal
 
@@ -130,7 +159,11 @@ lib/
 ├── UI/widgets/                    # Componentes reutilizables
 ├── theme/                         # Temas claro y oscuro
 └── router.dart                    # Rutas y protección de navegación
-test/                              # Tests unitarios y de servicios
+test/                              # Tests unitarios, de widgets y de flujos
+integration_test/                  # Escenario E2E Android
+firebase-tests/                    # Pruebas de reglas con Emulator Suite
+firestore.rules                    # Autorización y aislamiento de datos
+.github/workflows/                 # Integración continua
 docs/                              # Configuración y material de portfolio
 ```
 

@@ -36,8 +36,12 @@ Los E2E nunca deben utilizar producción:
 
 ## Ejecución local en Android
 
-Requisitos: Java 21, Firebase CLI, un móvil con instalación USB habilitada o un
-emulador Android iniciado.
+Requisitos: Flutter 3.44 (la versión usada en CI), Java 21, Node.js 24, Android
+SDK y un móvil con instalación USB habilitada o un emulador Android iniciado.
+Firebase CLI se ejecuta mediante `npx`, por lo que no requiere instalación
+global.
+
+### Móvil físico
 
 Conecta los puertos del dispositivo al equipo:
 
@@ -51,7 +55,7 @@ PowerShell:
 ```powershell
 $env:ORG_GRADLE_PROJECT_E2E = 'true'
 $env:GRADLE_OPTS = '-DE2E=true'
-firebase emulators:exec --only auth,firestore --project stronger-f7c9c `
+npx --yes firebase-tools@15.17.0 emulators:exec --only auth,firestore --project stronger-f7c9c `
   'flutter test integration_test/app_test.dart -d DEVICE_ID --dart-define=USE_FIREBASE_EMULATORS=true --dart-define=FIREBASE_EMULATOR_HOST=127.0.0.2'
 ```
 
@@ -60,8 +64,9 @@ Bash:
 ```bash
 export ORG_GRADLE_PROJECT_E2E=true
 export GRADLE_OPTS=-DE2E=true
-firebase emulators:exec --only auth,firestore --project stronger-f7c9c \
-  'flutter test integration_test/app_test.dart -d DEVICE_ID --dart-define=USE_FIREBASE_EMULATORS=true'
+npx --yes firebase-tools@15.17.0 emulators:exec \
+  --only auth,firestore --project stronger-f7c9c \
+  'flutter test integration_test/app_test.dart -d DEVICE_ID --dart-define=USE_FIREBASE_EMULATORS=true --dart-define=FIREBASE_EMULATOR_HOST=127.0.0.2'
 ```
 
 En un móvil físico se usa `127.0.0.2` para evitar que el SDK Android transforme
@@ -69,8 +74,20 @@ En un móvil físico se usa `127.0.0.2` para evitar que el SDK Android transform
 Xiaomi/MIUI también puede ser necesario habilitar **Instalar mediante USB** en
 las opciones de desarrollador y aceptar el aviso mostrado al instalar.
 
+### Emulador Android
+
+El emulador accede al equipo anfitrión mediante `10.0.2.2`, por lo que no
+necesita reglas `adb reverse`. Se utilizan las mismas variables Gradle y el
+mismo comando anterior, sustituyendo la definición del host por:
+
+```text
+--dart-define=FIREBASE_EMULATOR_HOST=10.0.2.2
+```
+
 ## Integración continua
 
 El workflow `.github/workflows/ci.yml` levanta un Android Emulator aislado,
-redirecciona los puertos y ejecuta el mismo escenario contra Firebase Emulator
-Suite. No necesita credenciales ni secretos de Firebase.
+accede a Firebase Emulator Suite mediante `10.0.2.2` y ejecuta el mismo
+escenario. No necesita credenciales ni secretos de Firebase. Si el recorrido
+falla, conserva la salida de Flutter y de los emuladores en el artefacto
+`android-e2e-diagnostics`.
