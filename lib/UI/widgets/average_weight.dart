@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:stronger/UI/widgets/chart_colors.dart';
 
 class AverageWeightChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
@@ -9,6 +10,7 @@ class AverageWeightChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final lineColor = ChartColors.primary(context);
 
     // Sort data by date
     final sortedData = List<Map<String, dynamic>>.from(data);
@@ -45,7 +47,7 @@ class AverageWeightChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: range == 0 ? 5 : range / 5, // Approx 5 lines
           getDrawingHorizontalLine: (value) {
-            return FlLine(color: colorScheme.outlineVariant, strokeWidth: 1);
+            return FlLine(color: ChartColors.grid(context), strokeWidth: 1.2);
           },
         ),
         titlesData: FlTitlesData(
@@ -109,12 +111,21 @@ class AverageWeightChart extends StatelessWidget {
             ],
             isCurved: true,
             preventCurveOverShooting: true,
-            barWidth: 3,
-            color: colorScheme.secondary, // Different color for distinction
-            dotData: const FlDotData(show: true),
+            barWidth: 4,
+            color: lineColor,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 4,
+                color: lineColor,
+                strokeWidth: 2,
+                strokeColor: colorScheme.surface,
+              ),
+            ),
             belowBarData: BarAreaData(
               show: true,
-              color: colorScheme.secondary.withValues(alpha: 0.1),
+              color: lineColor.withValues(alpha: 0.14),
             ),
           ),
         ],
