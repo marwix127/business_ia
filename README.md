@@ -17,7 +17,7 @@ móviles.
 
 |    Inicio     | Entrenamiento |    Chat IA    |    Progreso    |    Físico    |    Fatiga    |
 |---|---|---|---|---|---|
-| ![Home](docs/screenshots/menu.jpg) | ![Training](docs/screenshots/training.jpg) | ![AI Chat](docs/screenshots/chat.jpg) | ![ Training Progress](docs/screenshots/graphic.jpg) |  ![Body](docs/screenshots/body.jpg) | ![Fatigue](docs/screenshots/fatigue.jpg) |
+| <img src="docs/screenshots/menu.jpg" alt="Inicio" width="150"> | <img src="docs/screenshots/training.jpg" alt="Entrenamiento" width="150"> | <img src="docs/screenshots/chat.jpg" alt="Chat IA" width="150"> | <img src="docs/screenshots/graphic.jpg" alt="Progreso" width="150"> | <img src="docs/screenshots/body.jpg" alt="Físico" width="150"> | <img src="docs/screenshots/fatigue.jpg" alt="Fatiga" width="150"> |
 
 ## Funcionalidades
 
