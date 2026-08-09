@@ -5,7 +5,7 @@
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFCA28?logo=firebase&logoColor=black)
 ![Gemini](https://img.shields.io/badge/Firebase_AI_Logic-Gemini_3.5-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/marwix127/Stronger/actions/workflows/ci.yml/badge.svg)](https://github.com/marwix127/Stronger/actions/workflows/ci.yml)
-![Coverage](https://img.shields.io/badge/coverage-84.9%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-85.0%25-brightgreen)
 
 Stronger es una aplicación Flutter para registrar entrenamientos, consultar la
 evolución física y recibir orientación personalizada mediante Gemini. Está
@@ -15,9 +15,9 @@ móviles.
 
 ## Capturas
 
-| Inicio | Entrenamiento | Chat IA | Progreso | Físico |
+| Inicio | Entrenamiento | Chat IA | Progreso | Físico | Fatiga |
 |---|---|---|---|---|
-| ![Home](docs/screenshots/ScreenshotHome.jpg) | ![Training](docs/screenshots/ScreenshotTraining.jpg) | ![AI Chat](docs/screenshots/ScreenshotIA.jpg) | ![ Training Progress](docs/screenshots/ScreenshotProgress.jpg) |  ![Body](docs/screenshots/ScreenshotBody.jpg) |
+| ![Home](docs/screenshots/menu.jpg) | ![Training](docs/screenshots/training.jpg) | ![AI Chat](docs/screenshots/chat.jpg) | ![ Training Progress](docs/screenshots/graphic.jpg) |  ![Body](docs/screenshots/body.jpg) | ![Fatigue](docs/screenshots/fatigue.jpg) |
 
 ## Funcionalidades
 
@@ -137,8 +137,8 @@ npx --yes firebase-tools@15.17.0 emulators:exec --only firestore \
   --project stronger-rules-test "npm test --prefix firebase-tests"
 ```
 
-Actualmente la suite Flutter contiene 162 tests unitarios, de widgets y de
-flujo, con un 84,9 % de cobertura instrumentada. Se añade un escenario E2E
+Actualmente la suite Flutter contiene 168 tests unitarios, de widgets y de
+flujo, con un 85,0 % de cobertura instrumentada. Se añade un escenario E2E
 Android y 9 pruebas de reglas para acceso anónimo, aislamiento entre usuarios y
 propiedad de los ejercicios personalizados.
 
