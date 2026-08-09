@@ -29,6 +29,24 @@ void main() {
     aiClient = FakeCoachAiClient();
   });
 
+  group('Firebase coach response', () {
+    test('keeps a complete response unchanged', () {
+      expect(
+        formatCoachResponse('Respuesta completa', FinishReason.stop),
+        'Respuesta completa',
+      );
+    });
+
+    test('marks a response that reaches the output token limit', () {
+      expect(
+        formatCoachResponse('Respuesta parcial', FinishReason.maxTokens),
+        'Respuesta parcial\n\n'
+        'La respuesta alcanzó el límite de longitud. '
+        'Escribe «continúa» para completarla.',
+      );
+    });
+  });
+
   CoachService createService({String? Function()? getUid}) => CoachService(
     firestore: firestore,
     aiClient: aiClient,

@@ -34,6 +34,7 @@ abstract interface class CoachAiClient {
 
 class FirebaseCoachAiClient implements CoachAiClient {
   static const _modelName = 'gemini-3.5-flash';
+  static const _maxOutputTokens = 2048;
 
   final FirebaseAI _ai;
 
@@ -43,7 +44,7 @@ class FirebaseCoachAiClient implements CoachAiClient {
   Future<String?> generateReply(CoachAiRequest request) async {
     final model = _ai.generativeModel(
       model: _modelName,
-      generationConfig: GenerationConfig(maxOutputTokens: 800),
+      generationConfig: GenerationConfig(maxOutputTokens: _maxOutputTokens),
       systemInstruction: Content.system(
         _systemInstruction(request.trainingContext, request.bodyContext),
       ),
@@ -58,7 +59,10 @@ class FirebaseCoachAiClient implements CoachAiClient {
           .toList(),
     );
     final response = await chat.sendMessage(Content.text(request.message));
-    return response.text;
+    final finishReason = response.candidates.isEmpty
+        ? null
+        : response.candidates.first.finishReason;
+    return formatCoachResponse(response.text, finishReason);
   }
 
   String _systemInstruction(String trainingContext, String bodyContext) =>
@@ -81,6 +85,14 @@ $trainingContext
 $bodyContext
 </mediciones_corporales>
 ''';
+}
+
+@visibleForTesting
+String? formatCoachResponse(String? text, FinishReason? finishReason) {
+  if (text == null || finishReason != FinishReason.maxTokens) return text;
+  return '$text\n\n'
+      'La respuesta alcanzó el límite de longitud. '
+      'Escribe «continúa» para completarla.';
 }
 
 class CoachService {

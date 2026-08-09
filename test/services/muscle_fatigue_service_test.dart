@@ -31,11 +31,11 @@ void main() {
     service = MuscleFatigueService(firestore: firestore, aiClient: aiClient);
   });
 
-  Training training() => Training(
+  Training training({DateTime? date}) => Training(
     id: '',
     name: 'Día de\npierna',
     weight: null,
-    date: DateTime(2026, 1, 1),
+    date: date ?? DateTime(2026, 1, 1),
     exercises: [
       SelectedExercise(
         id: 'squat',
@@ -126,5 +126,53 @@ void main() {
 
   test('returns an empty map when no scores exist', () async {
     expect(await service.loadCurrentScores(uid), isEmpty);
+  });
+
+  test('recalculates fatigue from the latest recent training', () async {
+    final older = training(
+      date: DateTime.now().subtract(const Duration(hours: 24)),
+    );
+    final latest = training(
+      date: DateTime.now().subtract(const Duration(hours: 1)),
+    );
+    await firestore
+        .collection('users')
+        .doc(uid)
+        .collection('trainings')
+        .add(older.toMap());
+    await firestore
+        .collection('users')
+        .doc(uid)
+        .collection('trainings')
+        .add(latest.toMap());
+    aiClient.response = '{"quads": 65}';
+
+    expect(await service.recalculateLatest(uid), isTrue);
+
+    expect(aiClient.lastContext, contains(latest.name));
+    final data = (await scoresReference().get()).data()!;
+    expect(data['quads']['score'], 65);
+  });
+
+  test('does not recalculate a training after full recovery', () async {
+    final stale = training(
+      date: DateTime.now().subtract(const Duration(hours: 73)),
+    );
+    await firestore
+        .collection('users')
+        .doc(uid)
+        .collection('trainings')
+        .add(stale.toMap());
+    aiClient.response = '{"quads": 65}';
+
+    expect(await service.recalculateLatest(uid), isFalse);
+
+    expect(aiClient.lastContext, isNull);
+    expect((await scoresReference().get()).exists, isFalse);
+  });
+
+  test('reports a failed recovery when there are no trainings', () async {
+    expect(await service.recalculateLatest(uid), isFalse);
+    expect(aiClient.lastContext, isNull);
   });
 }

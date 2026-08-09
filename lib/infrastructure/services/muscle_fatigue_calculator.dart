@@ -2,6 +2,7 @@ import 'dart:convert';
 
 class MuscleFatigueCalculator {
   static const recoveryHours = 72.0;
+  static const fullRecoveryDuration = Duration(hours: 72);
   static const allowedMuscles = <String>[
     'chest',
     'frontShoulders',

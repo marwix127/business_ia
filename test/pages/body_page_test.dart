@@ -38,6 +38,9 @@ void main() {
     when(
       () => fatigueService.loadCurrentScores(uid),
     ).thenAnswer((_) async => {});
+    when(
+      () => fatigueService.recalculateLatest(uid),
+    ).thenAnswer((_) async => false);
   });
 
   Future<void> pumpPage(
@@ -260,6 +263,27 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyNever(() => fatigueService.loadCurrentScores(any()));
+    expect(find.byTooltip('Actualizar'), findsOneWidget);
+  });
+
+  testWidgets('recovers missing fatigue from the latest training', (
+    tester,
+  ) async {
+    var loadCount = 0;
+    when(() => fatigueService.loadCurrentScores(uid)).thenAnswer((_) async {
+      loadCount++;
+      return loadCount == 1 ? {} : {'lats': 60};
+    });
+    when(
+      () => fatigueService.recalculateLatest(uid),
+    ).thenAnswer((_) async => true);
+
+    await pumpPage(tester);
+    await tester.tap(find.text('Fatiga'));
+    await tester.pumpAndSettle();
+
+    verify(() => fatigueService.recalculateLatest(uid)).called(1);
+    verify(() => fatigueService.loadCurrentScores(uid)).called(2);
     expect(find.byTooltip('Actualizar'), findsOneWidget);
   });
 }

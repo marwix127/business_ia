@@ -172,9 +172,13 @@ class _MuscleFatigueTabState extends State<_MuscleFatigueTab>
 
   Future<void> _loadScores() async {
     final uid = _getUid();
-    final scores = uid != null
+    var scores = uid != null
         ? await _service.loadCurrentScores(uid)
         : <String, double>{};
+    if (uid != null && scores.isEmpty) {
+      final recalculated = await _service.recalculateLatest(uid);
+      if (recalculated) scores = await _service.loadCurrentScores(uid);
+    }
     if (!mounted) return;
     setState(() {
       _scores = scores;
