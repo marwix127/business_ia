@@ -15,7 +15,7 @@ móviles.
 
 ## Capturas
 
-| Inicio | Entrenamiento | Chat IA | Progreso | Físico | Fatiga |
+|    Inicio     | Entrenamiento |    Chat IA    |    Progreso    |    Físico    |    Fatiga    |
 |---|---|---|---|---|---|
 | ![Home](docs/screenshots/menu.jpg) | ![Training](docs/screenshots/training.jpg) | ![AI Chat](docs/screenshots/chat.jpg) | ![ Training Progress](docs/screenshots/graphic.jpg) |  ![Body](docs/screenshots/body.jpg) | ![Fatigue](docs/screenshots/fatigue.jpg) |
 
