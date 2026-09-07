@@ -145,11 +145,22 @@ Future<void> _activateAppCheck() async {
 
   switch (defaultTargetPlatform) {
     case TargetPlatform.android:
-      await FirebaseAppCheck.instance.activate(
-        providerAndroid: kDebugMode
-            ? const AndroidDebugProvider()
-            : const AndroidPlayIntegrityProvider(),
-      );
+      // Play Integrity solo atesta apps que Google Play reconoce, y Stronger se
+      // distribuye como APK desde GitHub: en release la atestación siempre
+      // devuelve 403. Como firebase_ai pide el token sin capturar el error, eso
+      // dejaba al coach sin responder. Al no activar App Check en release el
+      // servicio ni se registra, firebase_ai no lo consulta y la petición sale
+      // sin cabecera (requiere App Check sin imponer en la consola).
+      if (kDebugMode) {
+        await FirebaseAppCheck.instance.activate(
+          providerAndroid: const AndroidDebugProvider(),
+        );
+      } else {
+        debugPrint(
+          'App Check desactivado en Android release: la distribución fuera de '
+          'Play no puede superar Play Integrity.',
+        );
+      }
     case TargetPlatform.iOS:
     case TargetPlatform.macOS:
       await FirebaseAppCheck.instance.activate(
