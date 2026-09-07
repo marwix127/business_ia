@@ -109,8 +109,17 @@ Web necesita además la clave pública del proveedor de App Check:
 flutter run -d chrome --dart-define=RECAPTCHA_SITE_KEY=public_site_key
 ```
 
-El repositorio no publica binarios y la firma Android de producción debe
-configurarse antes de distribuir una versión release.
+## Distribución
+
+La app se descarga como APK desde las
+[releases del repositorio](../../releases); no está publicada en Google Play, así
+que se instala manualmente y no se actualiza sola.
+
+Publicar una versión es empujar una etiqueta: `git tag v2.1.0 && git push
+--tags`. A partir de ahí el workflow `release.yml` valida, compila, firma y sube
+el APK. El proceso completo —generar el keystore, los secrets que consume el
+workflow y por qué App Check debe quedarse sin forzar fuera de Play— está en la
+[guía de publicación](docs/releases.md).
 
 ## Calidad
 
@@ -144,7 +153,8 @@ propiedad de los ejercicios personalizados.
 
 GitHub Actions ejecuta en cada `push` y `pull request` el análisis estático, la
 suite Flutter, un umbral mínimo del 80 % de cobertura, una compilación APK
-debug, las pruebas de reglas y el E2E sobre un emulador Android limpio.
+debug, las pruebas de reglas y el E2E sobre un emulador Android limpio. Las
+etiquetas `v*` disparan además el workflow de publicación.
 
 ## Estructura principal
 

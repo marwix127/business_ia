@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Android release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # La etiqueta manda, pero el versionCode del APK sale de pubspec.yaml:
+      # si no coinciden, publicarías un binario que dice ser otra versión.
+      - name: Check tag against pubspec version
+        shell: bash
+        run: |
+          full="$(awk '/^version:/ { print $2; exit }' pubspec.yaml)"
+          version="${full%%+*}"
+          build_number="${full##*+}"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la version $full de pubspec.yaml"
+            exit 1
+          fi
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "APP_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
+          echo "Publicando $version (build $build_number)"
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] \
+            || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Faltan secrets de firma: configura ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS y ANDROID_KEY_PASSWORD."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release-keystore.jks
+          printf 'storeFile=release-keystore.jks\n' > android/key.properties
+          {
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } >> android/key.properties
+
+      - name: Build signed release APK
+        run: flutter build apk --release
+
+      # Un solo APK universal: quien lo descarga del repo no tiene por qué
+      # saber qué ABI lleva su móvil.
+      - name: Name the artifact after the version
+        shell: bash
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             "stronger-${APP_VERSION}.apk"
+          ls -lh "stronger-${APP_VERSION}.apk"
+
+      # Red de seguridad: publicar un APK con la clave de debug dejaría a los
+      # usuarios sin poder actualizar cuando esa clave cambie de máquina.
+      - name: Verify the APK is not signed with debug keys
+        shell: bash
+        run: |
+          apksigner="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f \
+            | sort -V | tail -n 1)"
+          if [ -z "$apksigner" ]; then
+            echo "::error::No se encontró apksigner en $ANDROID_HOME/build-tools"
+            exit 1
+          fi
+          certs="$("$apksigner" verify --print-certs "stronger-${APP_VERSION}.apk")"
+          echo "$certs"
+          if echo "$certs" | grep -q 'CN=Android Debug'; then
+            echo "::error::El APK está firmado con la clave de debug, no se publica."
+            exit 1
+          fi
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: stronger-${{ env.APP_VERSION }}.apk
+          generate_release_notes: true
+          body: |
+            Descarga `stronger-${{ env.APP_VERSION }}.apk` y ábrelo en el móvil.
+            Android pedirá permiso para instalar desde esta fuente.
+
+            Build ${{ env.APP_BUILD_NUMBER }}.
+
+      # El keystore no debe sobrevivir al job aunque algo haya fallado antes.
+      - name: Remove signing material
+        if: always()
+        run: rm -f android/key.properties android/app/release-keystore.jks

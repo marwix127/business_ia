@@ -46,3 +46,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Claves de firma en cualquier punto del repo. android/.gitignore ya cubre
+# key.properties y los keystores dentro de android/; esto extiende la red al
+# resto del árbol. NUNCA versionar una clave privada.
+*.jks
+*.keystore

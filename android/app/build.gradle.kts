@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -11,6 +14,25 @@ plugins {
 val isE2eBuild =
     providers.gradleProperty("E2E").orNull == "true" ||
         providers.systemProperty("E2E").orNull == "true"
+
+// Firma de release. Las credenciales viven en android/key.properties, que no
+// se versiona: en local lo creas tú y en CI lo escribe el workflow de release
+// a partir de los secrets del repositorio.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+val keystoreProperties = Properties().apply {
+    if (hasReleaseKeystore) {
+        FileInputStream(keystorePropertiesFile).use { load(it) }
+    }
+}
+
+if (!hasReleaseKeystore) {
+    logger.warn(
+        "key.properties no encontrado: la build release se firmará con las " +
+            "claves de debug. Sirve para `flutter run --release`, pero ese " +
+            "APK no es distribuible."
+    )
+}
 
 android {
     namespace = "com.marwix127.stronger"
@@ -37,6 +59,17 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             if (isE2eBuild) {
@@ -44,9 +77,11 @@ android {
             }
         }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
