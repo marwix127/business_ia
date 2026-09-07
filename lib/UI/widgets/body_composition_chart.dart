@@ -329,8 +329,13 @@ class _BodyCompositionChartState extends State<BodyCompositionChart> {
                 if (index >= 0 &&
                     index < points.length &&
                     value == index.toDouble()) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                  // fitInside empuja hacia dentro las fechas de los extremos:
+                  // sin esto, la del último punto se sale por la derecha y
+                  // queda cortada.
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    space: 8,
+                    fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
                     child: Text(
                       DateFormat('dd/MM').format(points[index].date),
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
