@@ -71,4 +71,130 @@ void main() {
     expect(chart().data.lineBarsData.single.spots.single.y, 60);
     expect(chart().data.lineBarsData.single.color, Colors.green);
   });
+
+  testWidgets('body composition plots the muscle/fat index', (tester) async {
+    Widget tallHost(Widget child) => MaterialApp(
+      home: Scaffold(body: SizedBox(width: 600, height: 900, child: child)),
+    );
+
+    await tester.pumpWidget(
+      tallHost(
+        BodyCompositionChart(
+          measurements: [
+            Measurement(
+              weight: 80,
+              fat: 20,
+              muscle: 60,
+              date: DateTime(2026, 1, 1),
+            ),
+            // Sin grasa registrada: se queda fuera de la serie del índice.
+            Measurement(
+              weight: 81,
+              fat: 0,
+              muscle: 61,
+              date: DateTime(2026, 1, 8),
+            ),
+            Measurement(
+              weight: 82,
+              fat: 19,
+              muscle: 63,
+              date: DateTime(2026, 1, 15),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Índice M/G'));
+    await tester.pumpAndSettle();
+
+    final chart = tester.widget<LineChart>(find.byType(LineChart));
+    final values = chart.data.lineBarsData.single.spots.map((spot) => spot.y);
+    expect(values.length, 2);
+    expect(values.first, closeTo(3.75, 0.0001));
+    expect(values.last, closeTo(63 / (82 * 0.19), 0.0001));
+
+    // Resumen: valor actual y mejora respecto a la medición anterior.
+    expect(find.text('4.04'), findsOneWidget);
+    expect(find.text('+0.29'), findsOneWidget);
+    expect(find.byIcon(Icons.trending_up), findsOneWidget);
+  });
+
+  testWidgets('index summary separates the last change from the total', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            height: 900,
+            child: BodyCompositionChart(
+              measurements: [
+                Measurement(
+                  weight: 80,
+                  fat: 20,
+                  muscle: 60,
+                  date: DateTime(2026, 1, 1),
+                ),
+                Measurement(
+                  weight: 82,
+                  fat: 19,
+                  muscle: 63,
+                  date: DateTime(2026, 1, 8),
+                ),
+                Measurement(
+                  weight: 83,
+                  fat: 20,
+                  muscle: 64,
+                  date: DateTime(2026, 1, 15),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Índice M/G'));
+    await tester.pumpAndSettle();
+
+    // Ha empeorado respecto a la anterior, pero sigue por encima del inicio.
+    expect(find.text('3.86'), findsOneWidget);
+    expect(find.text('-0.19'), findsOneWidget);
+    expect(find.byIcon(Icons.trending_down), findsOneWidget);
+    expect(find.text('+0.11'), findsOneWidget);
+    expect(find.byIcon(Icons.trending_up), findsOneWidget);
+  });
+
+  testWidgets('index asks for the missing data instead of drawing a line', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        BodyCompositionChart(
+          measurements: [
+            Measurement(
+              weight: 80,
+              fat: 0,
+              muscle: 60,
+              date: DateTime(2026, 1, 1),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Índice M/G'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LineChart), findsNothing);
+    expect(
+      find.text(
+        'Registra peso, % de grasa y músculo en una misma medición para ver '
+        'tu índice.',
+      ),
+      findsOneWidget,
+    );
+  });
 }
