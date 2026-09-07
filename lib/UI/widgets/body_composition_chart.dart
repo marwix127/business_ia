@@ -376,6 +376,10 @@ class _BodyCompositionChartState extends State<BodyCompositionChart> {
         ],
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
+            // El tooltip sale centrado sobre el punto tocado, así que en los
+            // últimos puntos se salía de la pantalla y quedaba cortado.
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 return LineTooltipItem(

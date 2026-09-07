@@ -197,4 +197,69 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('the last date label stays inside the chart bounds', (
+    tester,
+  ) async {
+    // 5 mediciones -> intervalo 2 -> se etiquetan los indices 0, 2 y 4, asi
+    // que el ultimo punto (el pegado al borde derecho) lleva fecha.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 500,
+            child: BodyCompositionChart(
+              measurements: [
+                for (var day = 1; day <= 5; day++)
+                  Measurement(
+                    weight: 80.0 + day,
+                    fat: 20,
+                    muscle: 60,
+                    date: DateTime(2026, 1, day),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final chart = tester.getRect(find.byType(LineChart));
+    final lastLabel = tester.getRect(find.text('05/01'));
+
+    expect(
+      lastLabel.right,
+      lessThanOrEqualTo(chart.right),
+      reason: 'la fecha del ultimo punto se sale por la derecha y se corta',
+    );
+  });
+
+  testWidgets('the touch tooltip is kept inside the chart', (tester) async {
+    await tester.pumpWidget(
+      host(
+        BodyCompositionChart(
+          measurements: [
+            for (var day = 1; day <= 5; day++)
+              Measurement(
+                weight: 80.0 + day,
+                fat: 20,
+                muscle: 60,
+                date: DateTime(2026, 1, day),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    // Sin esto el tooltip de los últimos puntos se sale de la pantalla.
+    final tooltip = tester
+        .widget<LineChart>(find.byType(LineChart))
+        .data
+        .lineTouchData
+        .touchTooltipData;
+    expect(tooltip.fitInsideHorizontally, isTrue);
+    expect(tooltip.fitInsideVertically, isTrue);
+  });
 }
